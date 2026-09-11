@@ -89,6 +89,12 @@
       border: 1px solid rgba(255, 255, 255, 0.16);
     }
 
+    /* 當中央面板處於隱藏/探索星空模式時，強制其所有子元素一律不響應滑鼠與觸控事件，徹底根除幽靈攔截 */
+    #centerHub.pointer-events-none,
+    #centerHub.pointer-events-none * {
+      pointer-events: none !important;
+    }
+
     /* 膠囊星球光暈微光效果 */
     .capsule-pending {
       box-shadow: 0 0 14px rgba(255, 255, 255, 0.08), inset 0 0 10px rgba(255, 255, 255, 0.05);
@@ -192,7 +198,7 @@
 
   <!-- 4. 畫面正中央核心功能卡片 (Mobile-First Center Hub) -->
   <main id="centerHub" class="fixed inset-0 z-20 flex items-center justify-center p-4 pointer-events-none transition-all duration-500">
-    <div class="glass-panel w-full max-w-sm rounded-[28px] p-6 text-center pointer-events-auto relative shadow-2xl border border-white/20">
+    <div id="centerHubCard" class="glass-panel w-full max-w-sm rounded-[28px] p-6 text-center pointer-events-auto relative shadow-2xl border border-white/20">
       
       <!-- 頂部裝飾微光圖標 -->
       <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-600/20 border border-cyan-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_20px_rgba(56,189,248,0.3)] animate-float-slow">
@@ -1281,26 +1287,52 @@
     /* ============================================================
      * 6. 中央主控台 (Center Hub) 與全星空漫遊切換
      * ============================================================ */
+    let hubTransitionTimer = null;
+
     function toggleCenterHub() {
       initAudio();
       isCenterHubVisible = !isCenterHubVisible;
       const hub = document.getElementById('centerHub');
+      const hubCard = document.getElementById('centerHubCard');
       const floatBtn = document.getElementById('floatReturnBtn');
       const toggleText = document.getElementById('viewToggleText');
       const toggleIcon = document.getElementById('viewToggleIcon');
 
+      if (hubTransitionTimer) clearTimeout(hubTransitionTimer);
+
       if (isCenterHubVisible) {
-        hub.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
-        hub.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+        // 恢復顯示主選單
+        hub.classList.remove('hidden');
+        hub.classList.remove('pointer-events-none');
+        if (hubCard) {
+          hubCard.classList.remove('pointer-events-none');
+          hubCard.classList.add('pointer-events-auto');
+        }
+        requestAnimationFrame(() => {
+          hub.classList.remove('opacity-0', 'scale-90');
+          hub.classList.add('opacity-100', 'scale-100');
+        });
         floatBtn.classList.add('hidden');
         toggleText.textContent = '探索星空';
         toggleIcon.setAttribute('data-lucide', 'eye');
       } else {
-        hub.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+        // 探索星空模式：0 毫秒立即拔除觸控響應，徹底杜絕幽靈按鈕攔截星空點擊
+        if (hubCard) {
+          hubCard.classList.remove('pointer-events-auto');
+          hubCard.classList.add('pointer-events-none');
+        }
+        hub.classList.remove('opacity-100', 'scale-100');
         hub.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
         floatBtn.classList.remove('hidden');
         toggleText.textContent = '返回選單';
         toggleIcon.setAttribute('data-lucide', 'layout-grid');
+
+        // 淡出動畫完成後徹底加上 hidden，100% 脫離瀏覽器觸控命中測試樹
+        hubTransitionTimer = setTimeout(() => {
+          if (!isCenterHubVisible) {
+            hub.classList.add('hidden');
+          }
+        }, 300);
       }
       lucide.createIcons();
     }
