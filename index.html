@@ -89,9 +89,9 @@
       border: 1px solid rgba(255, 255, 255, 0.16);
     }
 
-    /* 當中央面板處於隱藏/探索星空模式時，強制其所有子元素一律不響應滑鼠與觸控事件，徹底根除幽靈攔截 */
-    #centerHub.pointer-events-none,
-    #centerHub.pointer-events-none * {
+    /* 當中央面板處於探索星空模式 (hub-hidden) 時，強制其所有子元素一律不響應滑鼠與觸控事件，徹底根除幽靈攔截 */
+    #centerHub.hub-hidden,
+    #centerHub.hub-hidden * {
       pointer-events: none !important;
     }
 
@@ -1302,8 +1302,8 @@
 
       if (isCenterHubVisible) {
         // 恢復顯示主選單
-        hub.classList.remove('hidden');
-        hub.classList.remove('pointer-events-none');
+        hub.classList.remove('hidden', 'hub-hidden');
+        hub.classList.add('pointer-events-none');
         if (hubCard) {
           hubCard.classList.remove('pointer-events-none');
           hubCard.classList.add('pointer-events-auto');
@@ -1316,13 +1316,14 @@
         toggleText.textContent = '探索星空';
         toggleIcon.setAttribute('data-lucide', 'eye');
       } else {
-        // 探索星空模式：0 毫秒立即拔除觸控響應，徹底杜絕幽靈按鈕攔截星空點擊
+        // 探索星空模式：立刻加上 hub-hidden，0 毫秒拔除所有卡片與按鈕觸控響應，徹底杜絕幽靈攔截
+        hub.classList.add('hub-hidden');
         if (hubCard) {
           hubCard.classList.remove('pointer-events-auto');
           hubCard.classList.add('pointer-events-none');
         }
         hub.classList.remove('opacity-100', 'scale-100');
-        hub.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+        hub.classList.add('opacity-0', 'scale-90');
         floatBtn.classList.remove('hidden');
         toggleText.textContent = '返回選單';
         toggleIcon.setAttribute('data-lucide', 'layout-grid');
