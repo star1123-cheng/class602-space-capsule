@@ -26,3 +26,7 @@ desktop.ini
 # 後端 Google Apps Script 原始碼與設定（已部署在 Google 雲端，避免公開試算表 ID）
 Code.gs
 appsscript.json
+
+# 學生名冊原始檔（避免學生個資上傳至 GitHub）
+*.csv
+學生名單.csv
