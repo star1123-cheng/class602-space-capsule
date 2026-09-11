@@ -336,7 +336,7 @@
             <label class="text-xs font-semibold text-slate-300">寫給孩子的真心話</label>
             <span id="charCount" class="text-[11px] text-slate-400 font-mono">0 / 300</span>
           </div>
-          <textarea id="parentMessageText" rows="4" maxlength="300" required placeholder="寫下對孩子的鼓勵、肯定，或是對六年級的新期待..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors resize-none leading-relaxed"></textarea>
+          <textarea id="parentMessageText" rows="4" maxlength="300" required autocomplete="off" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400 transition-colors resize-none leading-relaxed"></textarea>
         </div>
 
         <!-- 家長署名與預設快捷 -->
@@ -1386,6 +1386,8 @@
 
     function closeParentModal() {
       document.getElementById('parentModal').classList.add('hidden');
+      document.getElementById('parentForm').reset();
+      updateCharCount();
     }
 
     function insertInspiration(text) {
