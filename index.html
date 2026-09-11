@@ -227,10 +227,11 @@
           <span>寫下給孩子的航行補給</span>
         </button>
 
-        <!-- 次按鈕：學生週一解鎖 -->
+        <!-- 次按鈕：學生週一解鎖（封存倒數中） -->
         <button onclick="openStudentModal()" class="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-medium text-sm border border-amber-400/30 shadow-[0_0_15px_rgba(245,158,11,0.15)] active:scale-[0.98] transition-all">
-          <i data-lucide="key-round" class="w-4 h-4 text-amber-400"></i>
+          <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
           <span>學生晨光登入解鎖</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono">9/13 08:00 啟封</span>
         </button>
       </div>
 
@@ -350,6 +351,73 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal D: 時空膠囊封存倒數視窗 (保護家長留言隱私，9/13 08:00 前全面鎖定) -->
+  <div id="countdownModal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-xl transition-opacity duration-300">
+    <div class="glass-panel w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 sm:p-7 relative border-t sm:border border-amber-400/40 shadow-2xl text-center">
+      
+      <!-- 手機端頂部拖曳指示條 -->
+      <div class="w-10 h-1.5 bg-slate-600/70 rounded-full mx-auto mb-3 sm:hidden"></div>
+
+      <!-- 關閉按鈕 -->
+      <button onclick="closeCountdownModal()" class="absolute top-4 right-4 sm:top-5 sm:right-5 text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- 頂部圖標（支援管理者連續點擊 5 下快速授權） -->
+      <div onclick="handleCountdownTitleTap()" class="cursor-pointer select-none">
+        <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-orange-500/20 to-amber-950/40 border border-amber-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_25px_rgba(245,158,11,0.35)] animate-pulse-slow">
+          <i data-lucide="lock" class="w-8 h-8 text-amber-300"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white tracking-wide flex items-center justify-center gap-2">
+          <span>時空膠囊密封航行中</span>
+        </h2>
+        <p class="text-xs text-amber-300/90 font-medium mt-1">台北時間 9 月 13 日（日）08:00 晨光時間啟封</p>
+      </div>
+
+      <!-- 說明文案 -->
+      <div class="bg-black/50 border border-white/10 rounded-2xl p-3.5 my-4 text-xs text-slate-300 leading-relaxed text-left">
+        <div class="flex items-start gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5"></i>
+          <div>
+            為守護每位家長親筆寫給孩子的溫暖真心話，<strong>目前全班信件全面處於時空密封保密狀態</strong>。請家長安心裝填，不用擔心被他人看見！
+          </div>
+        </div>
+      </div>
+
+      <!-- 即時動態倒數計時器儀表 -->
+      <div class="grid grid-cols-4 gap-2 mb-5">
+        <div class="bg-gradient-to-b from-slate-900/90 to-black/90 rounded-2xl p-2.5 border border-amber-400/30 shadow-inner">
+          <div id="countdownDays" class="font-display font-bold text-2xl text-amber-300">--</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 font-medium">天</div>
+        </div>
+        <div class="bg-gradient-to-b from-slate-900/90 to-black/90 rounded-2xl p-2.5 border border-cyan-400/30 shadow-inner">
+          <div id="countdownHours" class="font-display font-bold text-2xl text-cyan-300">--</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 font-medium">時</div>
+        </div>
+        <div class="bg-gradient-to-b from-slate-900/90 to-black/90 rounded-2xl p-2.5 border border-blue-400/30 shadow-inner">
+          <div id="countdownMins" class="font-display font-bold text-2xl text-blue-300">--</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 font-medium">分</div>
+        </div>
+        <div class="bg-gradient-to-b from-slate-900/90 to-black/90 rounded-2xl p-2.5 border border-indigo-400/30 shadow-inner">
+          <div id="countdownSecs" class="font-display font-bold text-2xl text-indigo-300">--</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 font-medium">秒</div>
+        </div>
+      </div>
+
+      <!-- 導引按鈕群 -->
+      <div class="space-y-2">
+        <button onclick="closeCountdownModal(); openParentModal();" class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-[0_0_20px_rgba(56,189,248,0.35)] active:scale-[0.98] transition-all">
+          <i data-lucide="feather" class="w-4 h-4 text-cyan-200"></i>
+          <span>✍️ 繼續為孩子裝填留言</span>
+        </button>
+        <button onclick="closeCountdownModal()" class="w-full py-2.5 text-xs text-slate-400 hover:text-white rounded-xl active:scale-95 transition-all">
+          我知道了（關閉）
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -942,12 +1010,32 @@
       mousePos.y = e.clientY;
     });
 
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0]) {
+        mousePos.x = e.touches[0].clientX;
+        mousePos.y = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
     window.addEventListener('touchmove', (e) => {
       if (e.touches && e.touches[0]) {
         mousePos.x = e.touches[0].clientX;
         mousePos.y = e.touches[0].clientY;
       }
     }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      mousePos.x = -9999;
+      mousePos.y = -9999;
+    }, { passive: true });
+
+    let lastCapsuleTapTime = 0;
+    function triggerCapsuleTap(student) {
+      const now = Date.now();
+      if (now - lastCapsuleTapTime < 350) return;
+      lastCapsuleTapTime = now;
+      handleCapsuleClick(student);
+    }
 
     function initPhysicsUniverse() {
       universeContainer.innerHTML = '';
@@ -975,6 +1063,9 @@
       const radius = 38; // 膠囊半徑
       const el = document.createElement('div');
       el.className = 'absolute top-0 left-0 cursor-pointer select-none transition-transform will-change-transform';
+      el.style.width = '76px';
+      el.style.height = '76px';
+      el.style.touchAction = 'manipulation';
       el.style.transform = `translate3d(${initX - radius}px, ${initY - radius}px, 0)`;
 
       const body = {
@@ -992,10 +1083,43 @@
       // 渲染膠囊內容
       renderCapsuleElement(body);
 
-      // 點擊事件
+      // 行動端零延遲輕觸 (Tap) 偵測：防範移動中點擊被手機瀏覽器取消
+      let pStartX = 0;
+      let pStartY = 0;
+      let pStartTime = 0;
+      let isPointerDown = false;
+
+      el.addEventListener('pointerdown', (e) => {
+        pStartX = e.clientX;
+        pStartY = e.clientY;
+        pStartTime = Date.now();
+        isPointerDown = true;
+        // 按下時稍微緩速，避免星球漂移逃逸
+        body.vx *= 0.25;
+        body.vy *= 0.25;
+      }, { passive: true });
+
+      el.addEventListener('pointerup', (e) => {
+        if (!isPointerDown) return;
+        isPointerDown = false;
+        const dx = e.clientX - pStartX;
+        const dy = e.clientY - pStartY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const elapsed = Date.now() - pStartTime;
+        // 移動小於 18px 且按住時間小於 550ms 判定為有效 Tap
+        if (dist < 18 && elapsed < 550) {
+          triggerCapsuleTap(student);
+        }
+      });
+
+      el.addEventListener('pointercancel', () => {
+        isPointerDown = false;
+      });
+
+      // 傳統點擊監聽備援
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        handleCapsuleClick(student);
+        triggerCapsuleTap(student);
       });
 
       return body;
@@ -1039,7 +1163,7 @@
         : `<div class="font-display font-bold text-base leading-none text-white tracking-wider">${student.seat} <span class="text-[9px] font-normal text-slate-300">號</span></div>`;
 
       body.element.innerHTML = `
-        <div class="relative w-[76px] h-[76px] rounded-full glass-card ${borderClass} ${gradClass} flex flex-col items-center justify-center p-1.5 text-center transition-all duration-300 hover:scale-115 active:scale-95 group">
+        <div class="relative w-[76px] h-[76px] rounded-full glass-card ${borderClass} ${gradClass} flex flex-col items-center justify-center p-1.5 text-center transition-all duration-300 hover:scale-115 active:scale-95 group pointer-events-none">
           <!-- 頂部圖標 -->
           <div class="text-xs mb-0.5 opacity-90">
             <i data-lucide="${statusIcon}" class="w-3.5 h-3.5"></i>
@@ -1076,14 +1200,14 @@
         b.vx += Math.cos(b.floatPhase) * 0.012;
         b.vy += Math.sin(b.floatPhase * 0.8) * 0.012;
 
-        // 2. 觸控/滑鼠微弱斥力
+        // 2. 觸控/滑鼠微弱斥力（放柔處理，避免手指碰觸星球時猛烈彈開）
         const dx = b.x - mousePos.x;
         const dy = b.y - mousePos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        const repelRadius = 110;
+        const repelRadius = 85;
 
         if (dist < repelRadius && dist > 1) {
-          const force = (1 - dist / repelRadius) * 0.3;
+          const force = (1 - dist / repelRadius) * 0.08;
           b.vx += (dx / dist) * force;
           b.vy += (dy / dist) * force;
         }
@@ -1352,10 +1476,85 @@
     }
 
     /* ============================================================
-     * 9. Mode 2: 學生/導師查閱端（無須密碼，多則信件展讀）
+     * 9. Mode 2: 學生/導師查閱端（封存倒數至 9/13 08:00，多則信件展讀）
      * ============================================================ */
+    // 預設倒數解鎖目標：台北時間 2026/09/13 早上 08:00
+    const UNLOCK_TIMESTAMP = new Date('2026-09-13T08:00:00+08:00').getTime();
+    let countdownInterval = null;
+    let countdownTapCount = 0;
+    let countdownTapTimer = null;
+
+    function isLocked() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('admin') === '1') return false;
+      return Date.now() < UNLOCK_TIMESTAMP;
+    }
+
+    function openCountdownModal() {
+      initAudio();
+      updateCountdownDisplay();
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(updateCountdownDisplay, 1000);
+      document.getElementById('countdownModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeCountdownModal() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      document.getElementById('countdownModal').classList.add('hidden');
+    }
+
+    function updateCountdownDisplay() {
+      const now = Date.now();
+      const diff = UNLOCK_TIMESTAMP - now;
+
+      if (diff <= 0) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        closeCountdownModal();
+        alert('🎉 時空膠囊解鎖時間已到達！現在可以開始查閱信件囉！');
+        openStudentModal();
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const dEl = document.getElementById('countdownDays');
+      const hEl = document.getElementById('countdownHours');
+      const mEl = document.getElementById('countdownMins');
+      const sEl = document.getElementById('countdownSecs');
+
+      if (dEl) dEl.textContent = String(days).padStart(2, '0');
+      if (hEl) hEl.textContent = String(hours).padStart(2, '0');
+      if (mEl) mEl.textContent = String(minutes).padStart(2, '0');
+      if (sEl) sEl.textContent = String(seconds).padStart(2, '0');
+    }
+
+    function handleCountdownTitleTap() {
+      countdownTapCount++;
+      if (countdownTapTimer) clearTimeout(countdownTapTimer);
+      countdownTapTimer = setTimeout(() => { countdownTapCount = 0; }, 2000);
+      if (countdownTapCount >= 5) {
+        countdownTapCount = 0;
+        closeCountdownModal();
+        alert('導師授權：已臨時解鎖信箱查閱！');
+        populateSeatSelects();
+        document.getElementById('studentModal').classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+
     function openStudentModal() {
       initAudio();
+      if (isLocked()) {
+        openCountdownModal();
+        return;
+      }
       populateSeatSelects();
       document.getElementById('studentModal').classList.remove('hidden');
       lucide.createIcons();
@@ -1368,6 +1567,12 @@
     function handleStudentUnlock(e) {
       e.preventDefault();
       initAudio();
+
+      if (isLocked()) {
+        closeStudentModal();
+        openCountdownModal();
+        return;
+      }
 
       const seat = document.getElementById('studentSeatSelect').value;
 
@@ -1390,6 +1595,10 @@
     }
 
     function openLetterCard(msgs, studentObj) {
+      if (isLocked()) {
+        openCountdownModal();
+        return;
+      }
       playLetterSfx();
       activeStudentUnlockData = { seatNumber: studentObj.seat, studentObj: studentObj, msgs: msgs };
 
