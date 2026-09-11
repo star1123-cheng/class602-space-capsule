@@ -1,0 +1,28 @@
+# =========================================================================
+# 班親會時空膠囊專案 .gitignore (資安防護先行為原則)
+# =========================================================================
+
+# 環境變數與機敏金鑰設定
+.env
+.env.*
+*.env
+*.key
+*.pem
+*credentials*.json
+*serviceAccountKey*.json
+.clasprc.json
+
+# 部署平台暫存與設定
+.netlify/
+.vercel/
+node_modules/
+dist/
+
+# 作業系統暫存
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 後端 Google Apps Script 原始碼與設定（已部署在 Google 雲端，避免公開試算表 ID）
+Code.gs
+appsscript.json
