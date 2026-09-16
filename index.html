@@ -237,7 +237,7 @@
         <button onclick="openStudentModal()" class="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-medium text-sm border border-amber-400/30 shadow-[0_0_15px_rgba(245,158,11,0.15)] active:scale-[0.98] transition-all">
           <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
           <span>學生晨光登入解鎖</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono">9/17 08:00 啟封</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono">12/31 12:00 啟封</span>
         </button>
       </div>
 
@@ -360,7 +360,7 @@
     </div>
   </div>
 
-  <!-- Modal D: 時空膠囊封存倒數視窗 (保護家長留言隱私，9/17 08:00 前全面鎖定) -->
+  <!-- Modal D: 時空膠囊封存倒數視窗 (保護家長留言隱私，12/31 12:00 前全面鎖定) -->
   <div id="countdownModal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-xl transition-opacity duration-300">
     <div class="glass-panel w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 sm:p-7 relative border-t sm:border border-amber-400/40 shadow-2xl text-center">
       
@@ -380,7 +380,7 @@
         <h2 class="text-xl font-bold text-white tracking-wide flex items-center justify-center gap-2">
           <span>時空膠囊密封航行中</span>
         </h2>
-        <p class="text-xs text-amber-300/90 font-medium mt-1">台北時間 9 月 17 日（四）08:00 晨光時間啟封</p>
+        <p class="text-xs text-amber-300/90 font-medium mt-1">台北時間 12 月 31 日（四）12:00 啟封</p>
       </div>
 
       <!-- 說明文案 -->
@@ -1511,10 +1511,10 @@
     }
 
     /* ============================================================
-     * 9. Mode 2: 學生/導師查閱端（封存倒數至 9/17 08:00，多則信件展讀）
+     * 9. Mode 2: 學生/導師查閱端（封存倒數至 12/31 12:00，多則信件展讀）
      * ============================================================ */
-    // 預設倒數解鎖目標：台北時間 2026/09/17 早上 08:00
-    const UNLOCK_TIMESTAMP = new Date('2026-09-17T08:00:00+08:00').getTime();
+    // 預設倒數解鎖目標：台北時間 2026/12/31 中午 12:00
+    const UNLOCK_TIMESTAMP = new Date('2026-12-31T12:00:00+08:00').getTime();
     let countdownInterval = null;
     let countdownTapCount = 0;
     let countdownTapTimer = null;
