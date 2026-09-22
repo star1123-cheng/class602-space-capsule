@@ -257,6 +257,13 @@
     </button>
   </div>
 
+  <!-- 著作權浮水印 (Copyright Watermark) -->
+  <div class="fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-20 pointer-events-none select-none">
+    <div class="flex items-center px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-slate-100 text-xs font-semibold tracking-wide shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+      <span>Created by 祐誠老師</span>
+    </div>
+  </div>
+
   <!-- 提示橫幅（當送出留言後提示膠囊已在星空點亮） -->
   <div id="orbitBanner" class="fixed top-16 left-1/2 -translate-x-1/2 z-30 hidden transition-all duration-300 pointer-events-none">
     <div class="px-4 py-2 rounded-full glass-panel border border-cyan-400/50 text-cyan-300 text-xs font-semibold flex items-center gap-2 shadow-[0_0_25px_rgba(56,189,248,0.5)] animate-bounce">
@@ -611,23 +618,23 @@
      * 1. 班級名單配置（16 位學生 + 1 位導師，共 17 位成員）
      * ============================================================ */
     const STUDENTS = [
-      { seat: '導師', name: '張祐誠', role: 'teacher' },
-      { seat: '01', name: '邱亮維' },
-      { seat: '02', name: '李侑益' },
-      { seat: '03', name: '周承禹' },
-      { seat: '04', name: '黃棣安' },
-      { seat: '05', name: '陳柏曳' },
-      { seat: '06', name: '林奕愷' },
-      { seat: '07', name: '潘堂榮' },
-      { seat: '08', name: '鐘函恩' },
-      { seat: '09', name: '呂秀帷' },
-      { seat: '10', name: '張綵礽' },
-      { seat: '11', name: '劉芮帆' },
-      { seat: '13', name: '吳芷嫙' },
-      { seat: '14', name: '蔡安妤' },
-      { seat: '15', name: '林睿榆' },
-      { seat: '16', name: '陳永璇' },
-      { seat: '17', name: '潘采桂' }
+      { seat: '導師', name: '張○誠', role: 'teacher' },
+      { seat: '01', name: '邱○維' },
+      { seat: '02', name: '李○益' },
+      { seat: '03', name: '周○禹' },
+      { seat: '04', name: '黃○安' },
+      { seat: '05', name: '陳○曳' },
+      { seat: '06', name: '林○愷' },
+      { seat: '07', name: '潘○榮' },
+      { seat: '08', name: '鐘○恩' },
+      { seat: '09', name: '呂○帷' },
+      { seat: '10', name: '張○礽' },
+      { seat: '11', name: '劉○帆' },
+      { seat: '13', name: '吳○嫙' },
+      { seat: '14', name: '蔡○妤' },
+      { seat: '15', name: '林○榆' },
+      { seat: '16', name: '陳○璇' },
+      { seat: '17', name: '潘○桂' }
     ];
 
     const STORAGE_KEY = 'ANTIGRAVITY_MESSAGES_V2';
@@ -1352,7 +1359,7 @@
         const msgs = storedMessages[student.seat] || [];
         const count = msgs.length;
         const isTeacher = student.seat === '導師';
-        const baseName = isTeacher ? '【導師】張祐誠' : `${student.seat} 號 ${student.name}`;
+        const baseName = isTeacher ? `【導師】${student.name}` : `${student.seat} 號 ${student.name}`;
 
         // 家長端：已留過言依然可選，提示已留則數與可繼續追加
         const parentTag = count > 0 ? `（⭐ 已有 ${count} 則，可繼續追加）` : '';
@@ -1494,7 +1501,7 @@
 
       // 3. 顯示提示橫幅（提示累計則數）
       const banner = document.getElementById('orbitBanner');
-      const displayName = studentObj.seat === '導師' ? '【導師】張祐誠' : `${seat} 號 ${studentObj.name}`;
+      const displayName = studentObj.seat === '導師' ? `【導師】${studentObj.name}` : `${seat} 號 ${studentObj.name}`;
       const count = storedMessages[seat].length;
       document.getElementById('orbitBannerText').textContent = count > 1
         ? `✨ ${displayName} 已累積收到 ${count} 則時空補給！`
@@ -1618,7 +1625,7 @@
 
       const msgs = storedMessages[seat] || [];
       const studentObj = STUDENTS.find(s => s.seat === seat);
-      const displayName = studentObj.seat === '導師' ? '【導師】張祐誠' : `${studentObj.seat} 號 ${studentObj.name}`;
+      const displayName = studentObj.seat === '導師' ? `【導師】${studentObj.name}` : `${studentObj.seat} 號 ${studentObj.name}`;
 
       if (msgs.length === 0) {
         alert(`${displayName} 目前還沒有收到時空留言喔！請先由家長或師長填寫發射。`);
@@ -1637,7 +1644,7 @@
       playLetterSfx();
       activeStudentUnlockData = { seatNumber: studentObj.seat, studentObj: studentObj, msgs: msgs };
 
-      const displayName = studentObj.seat === '導師' ? '【導師】張祐誠' : `${studentObj.seat} 號 ${studentObj.name}`;
+      const displayName = studentObj.seat === '導師' ? `【導師】${studentObj.name}` : `${studentObj.seat} 號 ${studentObj.name}`;
       document.getElementById('displayStudentInfo').textContent = displayName;
       document.getElementById('letterSubCount').textContent = msgs.length > 1
         ? `親師會時空膠囊・累積收到 ${msgs.length} 則滿載愛與期許的航行補給`
