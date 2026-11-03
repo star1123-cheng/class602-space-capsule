@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>我的時空膠囊</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=LXGW+WenKai+TC&family=Yellowtail&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="capsule-print.css" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--night);
+      background-image:
+        radial-gradient(1.4px 1.4px at 12% 18%, #f6c453, transparent),
+        radial-gradient(1px 1px at 78% 9%, #fff, transparent),
+        radial-gradient(1.2px 1.2px at 91% 42%, #fff, transparent),
+        radial-gradient(1px 1px at 6% 66%, #fff, transparent),
+        radial-gradient(1.4px 1.4px at 88% 83%, #f6c453, transparent);
+      background-attachment: fixed;
+      color: #eef1fc;
+      font-family: var(--hand);
+      font-size: 19px;
+      line-height: 1.7;
+    }
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 36px 20px 64px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--script);
+      font-weight: 400;
+      font-size: clamp(44px, 9vw, 64px);
+      line-height: 1.1;
+      color: #f6c453;
+    }
+
+    .who {
+      margin: 6px 0 30px;
+      font-size: 22px;
+    }
+
+    .notice {
+      padding: 28px 4px;
+      font-size: 22px;
+    }
+
+    .count-down {
+      display: block;
+      margin: 8px 0;
+      font-size: clamp(30px, 7vw, 44px);
+      color: #f6c453;
+    }
+
+    .letter {
+      position: relative;
+      margin: 0 0 34px;
+      padding: 30px 28px 26px;
+      background: #fff;
+      color: var(--ink);
+      border-radius: 3px;
+      animation: letter-out .5s ease-out both;
+    }
+
+    .letter:nth-child(even) { transform: rotate(.35deg); }
+    .letter:nth-child(odd) { transform: rotate(-.3deg); }
+
+    @keyframes letter-out {
+      from { opacity: 0; translate: 0 18px; }
+      to { opacity: 1; translate: 0 0; }
+    }
+
+    .letter-message {
+      margin: 0;
+      font-size: 21px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .letter-from {
+      margin: 10px 0 20px;
+      text-align: right;
+      color: var(--ink-soft);
+    }
+
+    label.reply-label {
+      display: block;
+      font-family: var(--script);
+      font-size: 30px;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 112px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--rule);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      resize: vertical;
+    }
+
+    textarea:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--marigold);
+      outline-offset: 2px;
+    }
+
+    .reply-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .reply-state {
+      font-size: 16px;
+      color: var(--ink-soft);
+    }
+
+    .reply-state.is-error { color: #b3261e; }
+
+    button {
+      min-height: 48px;
+      padding: 8px 22px;
+      border: 0;
+      border-radius: 24px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button[disabled] { opacity: .55; cursor: default; }
+
+    .btn-send { background: var(--ink); color: #fff; }
+
+    .keep {
+      margin-top: 8px;
+      padding-top: 24px;
+      border-top: 1px dashed #5a6596;
+    }
+
+    .keep h2 {
+      margin: 0 0 14px;
+      font-weight: 400;
+      font-size: 22px;
+    }
+
+    .keep-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn-keep { background: #f6c453; color: #1d2452; }
+    .btn-quiet { background: transparent; color: #eef1fc; border: 1.5px solid #8f99c7; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .letter { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <h1>Your Space Capsule</h1>
+    <p class="notice">正在打開膠囊……</p>
+  </main>
+
+  <script src="capsule-shared.js"></script>
+  <script>
+    /* 代碼放在網址 # 後面：這段不會傳到網站主機，只有這台平板的頁面讀得到 */
+    const token = new URLSearchParams(location.hash.slice(1)).get('t') || '';
+    const app = document.getElementById('app');
+    let seat = '';
+    let messages = [];
+    let countdownTimer = null;
+
+    function showScreen(children) {
+      app.replaceChildren(el('h1', {}, 'Your Space Capsule'), ...children);
+    }
+
+    function showNotice(text) {
+      showScreen([el('p', { class: 'notice' }, text)]);
+    }
+
+    function closeMailbox() {
+      if (countdownTimer) clearInterval(countdownTimer);
+      // 用 replace 把含代碼的網址換掉，下一位同學按「上一頁」也回不到這裡
+      history.replaceState(null, '', location.pathname + location.search);
+      messages = [];
+      getPrintRoot().replaceChildren();
+      showNotice('信箱已關閉，可以把平板交給下一位同學。');
+    }
+
+    function renderLocked(data) {
+      const clock = el('strong', { class: 'count-down' });
+      const target = new Date(data.unlockAt).getTime();
+      const opensAt = new Date(data.unlockAt).toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Taipei' });
+      const tick = () => {
+        const diff = target - Date.now();
+        if (diff <= 0) {
+          clearInterval(countdownTimer);
+          load();
+          return;
+        }
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor(diff / 3600000) % 24;
+        const mins = Math.floor(diff / 60000) % 60;
+        clock.textContent = `還有 ${days} 天 ${hours} 小時 ${mins} 分`;
+      };
+      tick();
+      countdownTimer = setInterval(tick, 30000);
+
+      showScreen([
+        el('p', { class: 'who' }, `${seatLabel(data.seatNumber)}的膠囊`),
+        el('p', { class: 'notice' }, [
+          data.messageCount > 0 ? `裡面有 ${data.messageCount} 封信，正在飛向你。` : '膠囊正在等待第一封信。',
+          clock,
+          `${opensAt} 開啟`
+        ]),
+        el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
+      ]);
+    }
+
+    function renderLetter(m) {
+      const inputId = `reply-${m.id}`;
+      const input = el('textarea', { id: inputId, maxlength: '300', placeholder: '想對寫信給我的人說……' });
+      input.value = m.replyText || '';
+      const state = el('span', { class: 'reply-state' }, m.replyTime ? `已送出（${m.replyTime}）` : '');
+      const send = el('button', { class: 'btn-send' }, m.replyText ? '修改回信' : '送出回信');
+
+      send.addEventListener('click', async () => {
+        const text = input.value.trim();
+        state.classList.remove('is-error');
+        if (!text) {
+          state.classList.add('is-error');
+          state.textContent = '先寫下想說的話，再送出。';
+          input.focus();
+          return;
+        }
+        send.disabled = true;
+        state.textContent = '傳送中……';
+        try {
+          const saved = await capsuleApi({ action: 'saveReply', token, messageId: m.id, replyText: text });
+          m.replyText = saved.replyText;
+          m.replyTime = saved.replyTime;
+          state.textContent = `已送出（${saved.replyTime}）`;
+          send.textContent = '修改回信';
+        } catch (e) {
+          state.classList.add('is-error');
+          state.textContent = `${e.message} 你寫的字還留在框裡。`;
+        } finally {
+          send.disabled = false;
+        }
+      });
+
+      return el('article', { class: 'letter' }, [
+        el('p', { class: 'letter-message' }, m.message),
+        el('p', { class: 'letter-from' }, m.parentSign),
+        el('label', { class: 'reply-label', for: inputId }, 'My Reply'),
+        input,
+        el('div', { class: 'reply-row' }, [state, send])
+      ]);
+    }
+
+    function renderLetters(data) {
+      seat = data.seatNumber;
+      messages = data.messages;
+      const text = messages.map(m => m.message + m.parentSign + m.replyText).join('');
+
+      if (!messages.length) {
+        showScreen([
+          el('p', { class: 'who' }, `${seatLabel(seat)}的膠囊`),
+          el('p', { class: 'notice' }, '膠囊裡還沒有信。可以請家人到班親會網站寫一封。'),
+          el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
+        ]);
+        return;
+      }
+
+      showScreen([
+        el('p', { class: 'who' }, `${seatLabel(seat)}收到 ${messages.length} 封信`),
+        el('div', {}, messages.map(renderLetter)),
+        el('section', { class: 'keep' }, [
+          el('h2', {}, '把這些信留下來'),
+          el('div', { class: 'keep-actions' }, [
+            el('button', {
+              class: 'btn-keep',
+              onclick: () => printWith(
+                root => renderMemoryBook(root, seat, messages),
+                messages.map(m => m.message + m.parentSign + m.replyText).join(''),
+                `${seatLabel(seat)}回憶集`
+              )
+            }, '存成回憶集 PDF'),
+            el('button', {
+              class: 'btn-keep',
+              onclick: () => printWith(root => renderLetterSheets(root, seat, messages), text, `${seatLabel(seat)}手寫信紙`)
+            }, '列印手寫信紙'),
+            el('button', { class: 'btn-quiet', onclick: closeMailbox }, '看完了，關閉信箱')
+          ])
+        ])
+      ]);
+    }
+
+    async function load() {
+      if (!token) {
+        showNotice('請用平板相機掃描老師發的 QR code，就能打開你的膠囊。');
+        return;
+      }
+      try {
+        const data = await capsuleApi({ action: 'getMyMessages', token });
+        if (data.locked) renderLocked(data);
+        else renderLetters(data);
+      } catch (e) {
+        showNotice(e.message);
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

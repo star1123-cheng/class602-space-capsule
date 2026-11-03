@@ -1,0 +1,321 @@
+/* 列印版面：A4 手寫信紙、回憶集、QR code 卡片（學生頁與導師頁共用） */
+:root {
+  --ink: #232f66;
+  --ink-soft: #5a6596;
+  --rule: #b4bcdc;
+  --marigold: #e8a317;
+  --earth: #4f86c6;
+  --night: #161d45;
+  --hand: "Iansui", "LXGW WenKai TC", "DFKai-SB", "BiauKai", serif;
+  --script: "Yellowtail", "Iansui", cursive;
+}
+
+/* 平時放在畫面外，排版尺寸與列印相同，才能事先量出留言是否放得下 */
+#printRoot {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.sheet {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--hand);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sheet-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.script {
+  font-family: var(--script);
+  font-weight: 400;
+}
+
+/* ---------- A4 手寫信紙 ---------- */
+.letter-top {
+  position: absolute;
+  top: 13mm;
+  left: 20mm;
+  right: 20mm;
+  height: 124mm;
+  display: flex;
+  flex-direction: column;
+}
+
+.letter-head {
+  display: flex;
+  align-items: baseline;
+  gap: 5mm;
+  margin-bottom: 4mm;
+  padding-right: 24mm;
+}
+
+.letter-head .script {
+  font-size: 30pt;
+  line-height: 1.1;
+}
+
+.letter-head .to {
+  font-size: 13pt;
+  color: var(--ink-soft);
+}
+
+.letter-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.letter-entry + .letter-entry {
+  margin-top: 0.7em;
+  padding-top: 0.6em;
+  border-top: 0.3mm dashed var(--rule);
+}
+
+.letter-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+.letter-sign {
+  margin: 0.25em 0 0;
+  text-align: right;
+  color: var(--ink-soft);
+  font-size: 0.92em;
+}
+
+.letter-bottom {
+  position: absolute;
+  top: 163mm;
+  left: 20mm;
+  right: 20mm;
+  bottom: 13mm;
+  display: flex;
+  flex-direction: column;
+}
+
+.reply-head {
+  display: flex;
+  align-items: baseline;
+  gap: 5mm;
+}
+
+.reply-head .script {
+  font-size: 30pt;
+  line-height: 1.1;
+}
+
+.reply-head .to {
+  font-size: 13pt;
+  color: var(--ink-soft);
+}
+
+.reply-lines {
+  flex: 1;
+  background-image: linear-gradient(to bottom, transparent calc(10.5mm - 0.3mm), var(--rule) calc(10.5mm - 0.3mm), var(--rule) 10.5mm);
+  background-size: 100% 10.5mm;
+  margin-bottom: 3mm;
+}
+
+.reply-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8mm;
+  font-size: 12pt;
+  color: var(--ink-soft);
+}
+
+.reply-foot span {
+  display: inline-block;
+  min-width: 38mm;
+  border-bottom: 0.3mm solid var(--rule);
+  padding-bottom: 1mm;
+}
+
+/* ---------- 回憶集 ---------- */
+.book-cover-text {
+  position: absolute;
+  left: 22mm;
+  right: 22mm;
+  top: 84mm;
+  color: #fff;
+}
+
+.book-cover-text .script {
+  display: block;
+  font-size: 58pt;
+  line-height: 1.05;
+  color: #f6c453;
+}
+
+.book-cover-text h2 {
+  margin: 7mm 0 0;
+  font-size: 25pt;
+  font-weight: 400;
+}
+
+.book-cover-who {
+  position: absolute;
+  left: 22mm;
+  bottom: 24mm;
+  color: #d9def5;
+  font-size: 15pt;
+  line-height: 1.6;
+}
+
+.book-page-inner {
+  position: absolute;
+  top: 22mm;
+  left: 26mm;
+  right: 26mm;
+  bottom: 32mm;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 上下用 auto 置中：內容太長時不會被切掉開頭，才量得出是否放得下 */
+.book-content {
+  width: 100%;
+  margin: auto 0;
+}
+
+.book-title {
+  font-size: 27pt;
+  line-height: 1.2;
+  margin-bottom: 6mm;
+}
+
+.book-letter {
+  margin: 0;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.book-sign {
+  margin: 0.4em 0 0;
+  text-align: right;
+  color: var(--ink-soft);
+  font-size: 0.82em;
+}
+
+.book-reply {
+  margin-top: 8mm;
+  padding-left: 6mm;
+  border-left: 0.8mm solid var(--marigold);
+}
+
+.book-reply .script {
+  font-size: 21pt;
+  line-height: 1.2;
+  display: block;
+  margin-bottom: 2mm;
+}
+
+.book-reply p {
+  margin: 0;
+  font-size: 0.92em;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.book-reply small {
+  display: block;
+  margin-top: 2mm;
+  color: var(--ink-soft);
+  font-size: 10.5pt;
+}
+
+.book-folio {
+  position: absolute;
+  bottom: 6mm;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10pt;
+  color: var(--ink-soft);
+}
+
+/* ---------- QR code 卡片：每張 A4 8 張，沿虛線剪開 ---------- */
+.qr-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  padding: 10mm;
+  box-sizing: border-box;
+}
+
+.qr-card {
+  display: flex;
+  align-items: center;
+  gap: 6mm;
+  padding: 5mm 6mm;
+  border: 0.3mm dashed var(--rule);
+}
+
+.qr-card img {
+  width: 42mm;
+  height: 42mm;
+  image-rendering: pixelated;
+  flex: none;
+}
+
+.qr-card strong {
+  display: block;
+  font-size: 22pt;
+  font-weight: 400;
+  margin-bottom: 1.5mm;
+}
+
+.qr-card p {
+  margin: 0;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* ---------- 列印：只留下列印內容，每張獨立一頁 ---------- */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    min-height: 0 !important;
+  }
+
+  body > *:not(#printRoot) {
+    display: none !important;
+  }
+
+  #printRoot {
+    position: static;
+  }
+
+  .sheet {
+    break-after: page;
+    break-inside: avoid;
+  }
+
+  .sheet:last-child {
+    break-after: auto;
+  }
+}

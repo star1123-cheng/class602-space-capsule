@@ -233,11 +233,11 @@
           <span>寫下給孩子的航行補給</span>
         </button>
 
-        <!-- 次按鈕：學生週一解鎖（封存倒數中） -->
+        <!-- 次按鈕：學生改用專屬 QR code 開信 -->
         <button onclick="openStudentModal()" class="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-medium text-sm border border-amber-400/30 shadow-[0_0_15px_rgba(245,158,11,0.15)] active:scale-[0.98] transition-all">
           <i data-lucide="lock" class="w-4 h-4 text-amber-400"></i>
-          <span>學生晨光登入解鎖</span>
-          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono">12/31 12:00 啟封</span>
+          <span>學生掃 QR code 開信</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono" id="unlockBadge">12/31 12:00 啟封</span>
         </button>
       </div>
 
@@ -367,7 +367,7 @@
     </div>
   </div>
 
-  <!-- Modal D: 時空膠囊封存倒數視窗 (保護家長留言隱私，12/31 12:00 前全面鎖定) -->
+  <!-- Modal D: 時空膠囊封存倒數視窗 (保護家長留言隱私，解鎖時間前全面鎖定) -->
   <div id="countdownModal" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-xl transition-opacity duration-300">
     <div class="glass-panel w-full sm:max-w-md rounded-t-[32px] sm:rounded-3xl p-6 sm:p-7 relative border-t sm:border border-amber-400/40 shadow-2xl text-center">
       
@@ -379,15 +379,15 @@
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
 
-      <!-- 頂部圖標（支援管理者連續點擊 5 下快速授權） -->
-      <div onclick="handleCountdownTitleTap()" class="cursor-pointer select-none">
+      <!-- 頂部圖標 -->
+      <div class="select-none">
         <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-orange-500/20 to-amber-950/40 border border-amber-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_25px_rgba(245,158,11,0.35)] animate-pulse-slow">
           <i data-lucide="lock" class="w-8 h-8 text-amber-300"></i>
         </div>
         <h2 class="text-xl font-bold text-white tracking-wide flex items-center justify-center gap-2">
           <span>時空膠囊密封航行中</span>
         </h2>
-        <p class="text-xs text-amber-300/90 font-medium mt-1">台北時間 12 月 31 日（四）12:00 啟封</p>
+        <p id="unlockDetail" class="text-xs text-amber-300/90 font-medium mt-1">台北時間 12 月 31 日（四）12:00 啟封</p>
       </div>
 
       <!-- 說明文案 -->
@@ -434,124 +434,21 @@
     </div>
   </div>
 
-  <!-- Modal B: 學生登入解鎖 (Mode 2 - 手機最佳化) -->
-  <div id="studentModal" class="fixed inset-0 z-40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md transition-opacity duration-300">
+  <!-- Modal B: 學生開信提示（信件只能憑專屬 QR code 開啟） -->
+  <div id="studentModal" class="fixed inset-0 z-40 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md transition-all duration-300">
     <div class="glass-panel w-full sm:max-w-sm rounded-t-[32px] sm:rounded-3xl p-6 relative border-t sm:border border-amber-400/30 shadow-2xl">
       <div class="w-10 h-1.5 bg-slate-600/70 rounded-full mx-auto mb-3 sm:hidden"></div>
 
-      <button onclick="closeStudentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all">
+      <button onclick="closeStudentModal()" aria-label="關閉" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
 
-      <div class="text-center mb-5">
-        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2 border border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-          <i data-lucide="mail-open" class="w-6 h-6"></i>
+      <div class="text-center">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2 border border-amber-400/40">
+          <i data-lucide="qr-code" class="w-6 h-6"></i>
         </div>
-        <h2 class="text-lg font-bold text-white">開啟航行信件</h2>
-        <p class="text-xs text-slate-400 mt-0.5">選取姓名或身分，立即查閱專屬補給信</p>
-      </div>
-
-      <form id="studentLoginForm" onsubmit="handleStudentUnlock(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">選取姓名 / 身分</label>
-          <div class="relative">
-            <select id="studentSeatSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-400 transition-colors appearance-none">
-              <option value="" disabled selected>請選取姓名或身分...</option>
-            </select>
-            <div class="absolute right-3.5 top-3.5 text-slate-400 pointer-events-none">
-              <i data-lucide="chevron-down" class="w-4 h-4"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-1 pb-2 sm:pb-0">
-          <button type="submit" class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold text-base shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-[0.98] transition-all">
-            <i data-lucide="sparkle" class="w-4 h-4"></i>
-            <span>開啟專屬信件</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal C: 拆信展示與回覆 (Mode 2 - 時空信紙卡片) -->
-  <div id="letterModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl transition-all duration-500">
-    <div id="letterCardContainer" class="letter-paper w-full max-w-lg rounded-3xl p-5 sm:p-7 relative transform scale-95 opacity-0 transition-all duration-500 max-h-[92vh] overflow-y-auto no-scrollbar">
-      
-      <!-- 關閉按鈕 -->
-      <button onclick="closeLetterModal()" class="absolute top-4 right-4 sm:top-5 sm:right-5 text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all z-10">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <!-- 印章戳記（已回信時顯示） -->
-      <div id="stampReplied" class="hidden absolute top-5 right-14 stamp-badge px-2.5 py-0.5 text-xs">
-        已親啟回信
-      </div>
-
-      <!-- 信件 Header -->
-      <div class="border-b border-amber-400/25 pb-3.5 mb-4">
-        <div class="flex items-center justify-between mb-1">
-          <div class="flex items-center gap-2 text-amber-400">
-            <i data-lucide="mail-open" class="w-4 h-4"></i>
-            <span class="text-[11px] tracking-widest font-mono uppercase">Mission Supply Letter</span>
-          </div>
-          <!-- 追加新留言快捷按鈕 -->
-          <button type="button" onclick="appendNewMessageFromLetter()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-400/40 flex items-center gap-1 active:scale-95 transition-all">
-            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-            <span>追加新留言</span>
-          </button>
-        </div>
-        <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-          <span>給 <span id="displayStudentInfo" class="text-amber-300 font-bold">--</span> 的信</span>
-        </h3>
-        <p class="text-xs text-slate-400 mt-0.5" id="letterSubCount">親師會時空膠囊・來自家人最深沉的愛與期許</p>
-      </div>
-
-      <!-- 信件內文展示區（支援多則重複留言） -->
-      <div id="displayMessagesContainer" class="space-y-3 mb-4 max-h-[42vh] overflow-y-auto pr-1 no-scrollbar">
-        <!-- 動態渲染各則留言卡片 -->
-      </div>
-
-      <!-- 學生雙向回信區 -->
-      <div class="space-y-2.5">
-        <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
-          <i data-lucide="message-square-heart" class="w-4 h-4 text-pink-400"></i>
-          <span>航行員雙向回饋（回覆爸爸媽媽一句話）</span>
-        </div>
-
-        <!-- 未回覆時之輸入區 -->
-        <div id="replyInputSection" class="space-y-2">
-          <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="insertReplyPill('謝謝爸爸媽媽，六年級我會更加油更懂事！')" class="text-xs bg-slate-800/90 hover:bg-pink-950 hover:text-pink-300 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition-colors active:scale-95">
-              ❤️ 謝謝爸媽，我會更懂事
-            </button>
-            <button type="button" onclick="insertReplyPill('收到補給信超感動，請爸爸媽媽放心！')" class="text-xs bg-slate-800/90 hover:bg-pink-950 hover:text-pink-300 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition-colors active:scale-95">
-              🚀 收到超感動，請放心！
-            </button>
-            <button type="button" onclick="insertReplyPill('我也超愛你們，六年級我們會一起締造最棒回憶！')" class="text-xs bg-slate-800/90 hover:bg-pink-950 hover:text-pink-300 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition-colors active:scale-95">
-              🌟 一起締造最棒回憶！
-            </button>
-          </div>
-
-          <textarea id="studentReplyText" rows="2" maxlength="150" placeholder="寫下一句話回應爸爸媽媽的愛..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-pink-400 transition-colors resize-none leading-relaxed"></textarea>
-
-          <button onclick="handleStudentReplySubmit()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-semibold text-sm shadow-[0_0_15px_rgba(244,63,94,0.3)] active:scale-[0.98] transition-all">
-            <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
-            <span>傳送愛心回信</span>
-          </button>
-        </div>
-
-        <!-- 已回信之紀錄卡片 -->
-        <div id="replyDisplaySection" class="hidden bg-pink-950/30 border border-pink-500/30 rounded-2xl p-3.5 text-xs">
-          <div class="flex items-center justify-between text-pink-300 mb-1">
-            <span class="font-bold flex items-center gap-1.5">
-              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
-              我的回信紀錄
-            </span>
-            <span id="replyDisplayDate" class="font-mono text-[10px] text-pink-400/70">--</span>
-          </div>
-          <p id="replyDisplayText" class="text-slate-200 text-sm leading-relaxed mt-1">--</p>
-        </div>
+        <h2 class="text-lg font-bold text-white">用 QR code 打開信件</h2>
+        <p class="text-sm text-slate-300 mt-2 leading-relaxed">每位同學都有專屬的 QR code，用平板掃描老師發的卡片，就能讀到寫給自己的信並回覆。</p>
       </div>
     </div>
   </div>
@@ -643,18 +540,7 @@
 
     // storedMessages 結構：{ [seat]: [ { parentSign, message, isReplied, replyText, updatedAt }, ... ] }
     let storedMessages = {}; 
-    let activeStudentUnlockData = null;
     let isCenterHubVisible = true;
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
 
     /* ============================================================
      * 2. 音樂與音效引擎 (Web Audio API Procedural Cosmic Synthesizer)
@@ -863,10 +749,10 @@
           const parsed = JSON.parse(raw);
           storedMessages = {};
           for (const k in parsed) {
-            if (Array.isArray(parsed[k])) {
-              storedMessages[k] = parsed[k];
-            } else if (parsed[k] && typeof parsed[k] === 'object') {
-              storedMessages[k] = [parsed[k]];
+            const list = Array.isArray(parsed[k]) ? parsed[k] : (parsed[k] && typeof parsed[k] === 'object' ? [parsed[k]] : []);
+            // 舊版曾把留言內文存在瀏覽器：讀取時只留狀態，下一次存檔就會清掉內文
+            if (list.length) {
+              storedMessages[k] = list.map(m => ({ seatNumber: k, isReplied: Boolean(m.isReplied) }));
             }
           }
         } catch (e) {
@@ -922,7 +808,7 @@
       document.getElementById('progressBar').style.width = `${pct}%`;
     }
 
-    /* 雲端同步 GAS 讀取（以雲端資料庫為唯一真實來源，依座號分組支援重複留言） */
+    /* 雲端同步 GAS 讀取（只取得各座號的則數與回覆狀態，不含留言內容） */
     async function syncFromGas(gasUrl) {
       try {
         const res = await fetch(`${gasUrl}?action=getCapsules`, { method: 'GET' });
@@ -932,16 +818,13 @@
           json.data.forEach(item => {
             const seat = item.seatNumber;
             if (!grouped[seat]) grouped[seat] = [];
-            grouped[seat].push({
-              seatNumber: seat,
-              parentSign: item.parentSign || '家長',
-              message: item.message || '（此信件已儲存於雲端）',
-              isReplied: item.isReplied || false,
-              replyText: item.replyText || '',
-              updatedAt: item.updatedAt || ''
-            });
+            grouped[seat].push({ seatNumber: seat, isReplied: Boolean(item.isReplied) });
           });
           storedMessages = grouped;
+          if (json.unlockAt) {
+            UNLOCK_TIMESTAMP = new Date(json.unlockAt).getTime();
+            updateUnlockLabels();
+          }
           persistData();
           updateAllCapsulesView();
           populateSeatSelects();
@@ -1350,10 +1233,8 @@
      * ============================================================ */
     function populateSeatSelects() {
       const parentSel = document.getElementById('parentSeatSelect');
-      const studentSel = document.getElementById('studentSeatSelect');
 
       parentSel.innerHTML = '<option value="" disabled selected>請點此選取學生或導師姓名...</option>';
-      studentSel.innerHTML = '<option value="" disabled selected>請選取姓名或身分...</option>';
 
       STUDENTS.forEach(student => {
         const msgs = storedMessages[student.seat] || [];
@@ -1367,14 +1248,6 @@
         opt1.value = student.seat;
         opt1.textContent = `${baseName} ${parentTag}`;
         parentSel.appendChild(opt1);
-
-        // 學生查閱端
-        const star = count > 0 ? '⭐ ' : '';
-        const studentTag = count > 1 ? ` (${count} 則信件)` : '';
-        const opt2 = document.createElement('option');
-        opt2.value = student.seat;
-        opt2.textContent = `${star}${baseName}${studentTag}`;
-        studentSel.appendChild(opt2);
       });
     }
 
@@ -1435,8 +1308,6 @@
         return;
       }
 
-      const now = new Date();
-      const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const studentObj = STUDENTS.find(s => s.seat === seat);
 
       if (!storedMessages[seat]) {
@@ -1444,15 +1315,7 @@
       }
 
       // 支援重複留言：push 至陣列中
-      storedMessages[seat].push({
-        seatNumber: seat,
-        studentName: studentObj ? studentObj.name : '',
-        parentSign: sign,
-        message: message,
-        isReplied: false,
-        replyText: '',
-        updatedAt: timeStr
-      });
+      storedMessages[seat].push({ seatNumber: seat, isReplied: false });
 
       persistData();
 
@@ -1518,17 +1381,25 @@
     }
 
     /* ============================================================
-     * 9. Mode 2: 學生/導師查閱端（封存倒數至 12/31 12:00，多則信件展讀）
+     * 9. Mode 2: 學生開信入口（封存倒數；信件內容改由 student.html 憑專屬代碼讀取）
      * ============================================================ */
-    // 預設倒數解鎖目標：台北時間 2026/12/31 中午 12:00
-    const UNLOCK_TIMESTAMP = new Date('2026-12-31T12:00:00+08:00').getTime();
+    // 倒數解鎖目標的預設值；實際時間以後端 Code.gs 的 UNLOCK_AT 為準
+    let UNLOCK_TIMESTAMP = new Date('2026-12-31T12:00:00+08:00').getTime();
     let countdownInterval = null;
-    let countdownTapCount = 0;
-    let countdownTapTimer = null;
+
+    // 畫面上的啟封日期跟著後端設定顯示，改日期時不必再改這裡
+    function updateUnlockLabels() {
+      const parts = {};
+      new Intl.DateTimeFormat('zh-TW', {
+        timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', weekday: 'narrow',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+      }).formatToParts(new Date(UNLOCK_TIMESTAMP)).forEach(p => { parts[p.type] = p.value; });
+      const time = `${parts.hour}:${parts.minute}`;
+      document.getElementById('unlockBadge').textContent = `${parts.month}/${parts.day} ${time} 啟封`;
+      document.getElementById('unlockDetail').textContent = `台北時間 ${parts.month} 月 ${parts.day} 日（${parts.weekday}）${time} 啟封`;
+    }
 
     function isLocked() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('admin') === '1') return false;
       return Date.now() < UNLOCK_TIMESTAMP;
     }
 
@@ -1556,8 +1427,7 @@
       if (diff <= 0) {
         if (countdownInterval) clearInterval(countdownInterval);
         closeCountdownModal();
-        alert('🎉 時空膠囊解鎖時間已到達！現在可以開始查閱信件囉！');
-        openStudentModal();
+                openStudentModal();
         return;
       }
 
@@ -1577,212 +1447,18 @@
       if (sEl) sEl.textContent = String(seconds).padStart(2, '0');
     }
 
-    function handleCountdownTitleTap() {
-      countdownTapCount++;
-      if (countdownTapTimer) clearTimeout(countdownTapTimer);
-      countdownTapTimer = setTimeout(() => { countdownTapCount = 0; }, 2000);
-      if (countdownTapCount >= 5) {
-        countdownTapCount = 0;
-        closeCountdownModal();
-        alert('導師授權：已臨時解鎖信箱查閱！');
-        populateSeatSelects();
-        document.getElementById('studentModal').classList.remove('hidden');
-        lucide.createIcons();
-      }
-    }
-
     function openStudentModal() {
       initAudio();
       if (isLocked()) {
         openCountdownModal();
         return;
       }
-      populateSeatSelects();
       document.getElementById('studentModal').classList.remove('hidden');
       lucide.createIcons();
     }
 
     function closeStudentModal() {
       document.getElementById('studentModal').classList.add('hidden');
-    }
-
-    function handleStudentUnlock(e) {
-      e.preventDefault();
-      initAudio();
-
-      if (isLocked()) {
-        closeStudentModal();
-        openCountdownModal();
-        return;
-      }
-
-      const seat = document.getElementById('studentSeatSelect').value;
-
-      if (!seat) {
-        alert('請先選擇姓名或身分！');
-        return;
-      }
-
-      const msgs = storedMessages[seat] || [];
-      const studentObj = STUDENTS.find(s => s.seat === seat);
-      const displayName = studentObj.seat === '導師' ? `【導師】${studentObj.name}` : `${studentObj.seat} 號 ${studentObj.name}`;
-
-      if (msgs.length === 0) {
-        alert(`${displayName} 目前還沒有收到時空留言喔！請先由家長或師長填寫發射。`);
-        return;
-      }
-
-      closeStudentModal();
-      openLetterCard(msgs, studentObj);
-    }
-
-    function openLetterCard(msgs, studentObj) {
-      if (isLocked()) {
-        openCountdownModal();
-        return;
-      }
-      playLetterSfx();
-      activeStudentUnlockData = { seatNumber: studentObj.seat, studentObj: studentObj, msgs: msgs };
-
-      const displayName = studentObj.seat === '導師' ? `【導師】${studentObj.name}` : `${studentObj.seat} 號 ${studentObj.name}`;
-      document.getElementById('displayStudentInfo').textContent = displayName;
-      document.getElementById('letterSubCount').textContent = msgs.length > 1
-        ? `親師會時空膠囊・累積收到 ${msgs.length} 則滿載愛與期許的航行補給`
-        : '親師會時空膠囊・來自家人最深沉的愛與期許';
-
-      // 動態渲染所有留言卡片（支援多則重複留言）
-      const container = document.getElementById('displayMessagesContainer');
-      container.innerHTML = '';
-
-      msgs.forEach((m, idx) => {
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'bg-black/40 rounded-2xl p-4 sm:p-5 border border-white/10 relative shadow-inner';
-        cardDiv.innerHTML = `
-          ${msgs.length > 1 ? `<div class="text-[10px] font-mono text-cyan-300 font-semibold mb-1.5 flex items-center gap-1"><i data-lucide="bookmark" class="w-3 h-3"></i> 第 ${idx + 1} 封補給信</div>` : ''}
-          <div class="text-slate-200 text-sm leading-relaxed whitespace-pre-line tracking-wide">${escapeHtml(m.message)}</div>
-          <div class="mt-3 text-right border-t border-white/5 pt-2 flex items-center justify-between text-xs">
-            <span class="text-[10px] text-slate-500 font-mono">${m.updatedAt ? `封存時間：${m.updatedAt}` : ''}</span>
-            <div>
-              <span class="text-slate-400 mr-1">寄件人：</span>
-              <span class="text-amber-300 font-semibold">${escapeHtml(m.parentSign || '家人')}</span>
-            </div>
-          </div>
-        `;
-        container.appendChild(cardDiv);
-      });
-
-      const stamp = document.getElementById('stampReplied');
-      const inputSec = document.getElementById('replyInputSection');
-      const displaySec = document.getElementById('replyDisplaySection');
-
-      const repliedMsg = msgs.find(m => m.isReplied && m.replyText);
-      if (repliedMsg) {
-        stamp.classList.remove('hidden');
-        inputSec.classList.add('hidden');
-        displaySec.classList.remove('hidden');
-        document.getElementById('replyDisplayText').textContent = repliedMsg.replyText;
-        document.getElementById('replyDisplayDate').textContent = repliedMsg.updatedAt || '';
-      } else {
-        stamp.classList.add('hidden');
-        inputSec.classList.remove('hidden');
-        displaySec.classList.add('hidden');
-        document.getElementById('studentReplyText').value = '';
-      }
-
-      const modal = document.getElementById('letterModal');
-      const card = document.getElementById('letterCardContainer');
-
-      modal.classList.remove('hidden');
-      setTimeout(() => {
-        card.classList.remove('scale-95', 'opacity-0');
-        card.classList.add('scale-100', 'opacity-100');
-      }, 50);
-
-      lucide.createIcons();
-    }
-
-    // 從信件卡片直接追加新留言
-    function appendNewMessageFromLetter() {
-      if (!activeStudentUnlockData) return;
-      const targetSeat = activeStudentUnlockData.seatNumber;
-      closeLetterModal();
-      openParentModal();
-      document.getElementById('parentSeatSelect').value = targetSeat;
-    }
-
-    function closeLetterModal() {
-      const card = document.getElementById('letterCardContainer');
-      card.classList.remove('scale-100', 'opacity-100');
-      card.classList.add('scale-95', 'opacity-0');
-      setTimeout(() => {
-        document.getElementById('letterModal').classList.add('hidden');
-      }, 250);
-    }
-
-    function insertReplyPill(text) {
-      initAudio();
-      const textarea = document.getElementById('studentReplyText');
-      textarea.value = text;
-      textarea.focus();
-    }
-
-    async function handleStudentReplySubmit() {
-      initAudio();
-      const text = document.getElementById('studentReplyText').value.trim();
-      if (!text) {
-        alert('請輸入一句想對爸爸媽媽說的話喔！');
-        return;
-      }
-
-      if (!activeStudentUnlockData) return;
-
-      const now = new Date();
-      const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      // 更新本地陣列中所有留言的回覆狀態
-      const msgs = storedMessages[activeStudentUnlockData.seatNumber] || [];
-      msgs.forEach(m => {
-        m.isReplied = true;
-        m.replyText = text;
-        m.updatedAt = timeStr;
-      });
-
-      persistData();
-
-      const gasUrl = localStorage.getItem(GAS_URL_KEY) || DEFAULT_GAS_URL;
-      if (gasUrl) {
-        try {
-          fetch(gasUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'saveStudentReply',
-              seatNumber: activeStudentUnlockData.seatNumber,
-              replyText: text
-            })
-          });
-        } catch (e) {
-          console.warn('雲端回信同步失敗：', e);
-        }
-      }
-
-      playHeartSfx();
-
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: ['#EC4899', '#F43F5E', '#FBBF24']
-      });
-
-      const studentObj = STUDENTS.find(s => s.seat === activeStudentUnlockData.seatNumber);
-      openLetterCard(msgs, studentObj);
-
-      const targetBody = physicsBodies.find(b => b.student.seat === activeStudentUnlockData.seatNumber);
-      if (targetBody) {
-        renderCapsuleElement(targetBody);
-      }
     }
 
     /* ============================================================

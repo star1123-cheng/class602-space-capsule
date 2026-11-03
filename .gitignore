@@ -30,3 +30,6 @@ appsscript.json
 # 學生名冊原始檔（避免學生個資上傳至 GitHub）
 *.csv
 學生名單.csv
+
+# 後端程式備份（內含試算表 ID）
+Code.*.gs

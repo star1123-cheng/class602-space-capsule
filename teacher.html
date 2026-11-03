@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>時空膠囊導師後台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=LXGW+WenKai+TC&family=Noto+Sans+TC:wght@400;500;700&family=Yellowtail&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="capsule-print.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" integrity="sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" crossorigin="anonymous"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f2f4fb;
+      color: var(--ink);
+      font-family: "Noto Sans TC", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 32px 16px 64px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 26px;
+    }
+
+    .lead { margin: 0 0 24px; color: var(--ink-soft); }
+
+    .login {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="password"] {
+      min-height: 44px;
+      min-width: 240px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--rule);
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    button {
+      min-height: 40px;
+      padding: 6px 14px;
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary { background: var(--ink); color: #fff; }
+    button[disabled] { opacity: .45; cursor: default; }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--marigold);
+      outline-offset: 2px;
+    }
+
+    .message { min-height: 26px; margin: 10px 0; }
+    .message.is-error { color: #b3261e; }
+
+    .bulk {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #dfe3f2;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th { font-weight: 500; color: var(--ink-soft); }
+    td.num { font-variant-numeric: tabular-nums; }
+
+    td .actions { display: flex; gap: 6px; }
+    td .actions button { min-height: 36px; padding: 3px 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>時空膠囊導師後台</h1>
+    <p class="lead">產生學生 QR code、匯出回憶集、列印手寫信紙。</p>
+    <div id="app"></div>
+    <p id="message" class="message" role="status"></p>
+  </main>
+
+  <script src="capsule-shared.js"></script>
+  <script>
+    const app = document.getElementById('app');
+    const messageEl = document.getElementById('message');
+    let teacherKey = '';  // 只留在這個分頁的記憶體，關閉就消失
+    let students = [];
+    let allMessages = [];
+
+    function say(text, isError) {
+      messageEl.textContent = text || '';
+      messageEl.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function messagesOf(seat) {
+      return allMessages.filter(m => m.seatNumber === seat);
+    }
+
+    function studentUrl(token) {
+      const base = CAPSULE_DEMO ? new URL('student.html?demo=1', location.href).href : `${CAPSULE_SITE_URL}student.html`;
+      return `${base}#t=${token}`;
+    }
+
+    function qrImage(token, label) {
+      const qr = qrcode(0, 'M');
+      qr.addData(studentUrl(token));
+      qr.make();
+      return el('img', { src: qr.createDataURL(8, 0), alt: `${label}的 QR code` });
+    }
+
+    function renderQrSheets(root, list) {
+      for (let i = 0; i < list.length; i += 8) {
+        const cards = list.slice(i, i + 8).map(s => el('div', { class: 'qr-card' }, [
+          qrImage(s.token, seatLabel(s.seat)),
+          el('div', {}, [
+            el('strong', {}, seatLabel(s.seat)),
+            el('p', {}, '用平板相機掃描，打開你的時空膠囊。這張卡片像鑰匙，請自己收好。')
+          ])
+        ]));
+        root.appendChild(el('section', { class: 'sheet qr-sheet' }, cards));
+      }
+    }
+
+    function allText(list) {
+      return list.map(m => m.message + m.parentSign + m.replyText).join('');
+    }
+
+    /* 全班輸出：只包含有收到信的座號，導師信排在最後 */
+    function seatsWithLetters() {
+      const seats = students.map(s => s.seat).concat('導師');
+      return seats.filter(seat => messagesOf(seat).length > 0);
+    }
+
+    function printLetters(seats, title) {
+      printWith(root => seats.forEach(seat => renderLetterSheets(root, seat, messagesOf(seat))), allText(allMessages), title);
+    }
+
+    function printBooks(seats, title) {
+      printWith(root => seats.forEach(seat => renderMemoryBook(root, seat, messagesOf(seat))), allText(allMessages), title);
+    }
+
+    async function resetToken(seat) {
+      if (!confirm(`要重設 ${seatLabel(seat)}的 QR code 嗎？舊卡片會立刻失效，需要重新列印。`)) return;
+      try {
+        const data = await capsuleApi({ action: 'teacherResetToken', key: teacherKey, seat });
+        students.find(s => s.seat === seat).token = data.token;
+        say(`${seatLabel(seat)}的 QR code 已重設，請重新列印這張卡片。`);
+      } catch (e) {
+        say(e.message, true);
+      }
+    }
+
+    function renderRow(seat, token) {
+      const msgs = messagesOf(seat);
+      const replied = msgs.filter(m => m.replyText).length;
+      const empty = msgs.length === 0;
+      const student = students.find(s => s.seat === seat);
+
+      return el('tr', {}, [
+        el('td', {}, seatLabel(seat)),
+        el('td', { class: 'num' }, `${msgs.length} 封`),
+        el('td', { class: 'num' }, `${replied} 封`),
+        el('td', {}, el('div', { class: 'actions' }, [
+          el('button', { disabled: empty, onclick: () => printLetters([seat], `${seatLabel(seat)}手寫信紙`) }, 'A4 信紙'),
+          el('button', { disabled: empty, onclick: () => printBooks([seat], `${seatLabel(seat)}回憶集`) }, '回憶集'),
+          token ? el('button', { onclick: () => printWith(root => renderQrSheets(root, [student]), '', `${seatLabel(seat)} QR code`) }, 'QR code') : null,
+          token ? el('button', { onclick: () => resetToken(seat) }, '重設') : null
+        ]))
+      ]);
+    }
+
+    function renderDashboard(unlockAt) {
+      const opensAt = new Date(unlockAt).toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Taipei' });
+      const seats = seatsWithLetters();
+
+      app.replaceChildren(
+        el('p', {}, `學生信箱開啟時間：${opensAt}。您在這裡不受時間限制。`),
+        el('div', { class: 'bulk' }, [
+          el('button', { class: 'primary', onclick: () => printWith(root => renderQrSheets(root, students), '', '全班 QR code') }, '列印全班 QR code'),
+          el('button', { class: 'primary', disabled: !seats.length, onclick: () => printLetters(seats, '全班手寫信紙') }, '列印全班 A4 信紙'),
+          el('button', { class: 'primary', disabled: !seats.length, onclick: () => printBooks(seats, '全班回憶集') }, '匯出全班回憶集')
+        ]),
+        el('div', { class: 'table-wrap' }, el('table', {}, [
+          el('thead', {}, el('tr', {}, [
+            el('th', {}, '座號'), el('th', {}, '收到'), el('th', {}, '已回信'), el('th', {}, '輸出')
+          ])),
+          el('tbody', {}, students.map(s => renderRow(s.seat, s.token)).concat(renderRow('導師', null)))
+        ]))
+      );
+    }
+
+    async function signIn(key) {
+      say('讀取中……');
+      try {
+        const data = await capsuleApi({ action: 'teacherGetAll', key });
+        teacherKey = key;
+        students = data.students;
+        allMessages = data.messages;
+        say('');
+        renderDashboard(data.unlockAt);
+      } catch (e) {
+        say(e.message, true);
+      }
+    }
+
+    function renderLogin() {
+      const input = el('input', { type: 'password', 'aria-label': '導師密碼', placeholder: '導師密碼', autocomplete: 'current-password' });
+      const form = el('form', { class: 'login' }, [input, el('button', { class: 'primary', type: 'submit' }, '登入')]);
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        signIn(input.value);
+      });
+      app.replaceChildren(form);
+      input.focus();
+    }
+
+    if (CAPSULE_DEMO) signIn('demo');
+    else renderLogin();
+  </script>
+</body>
+</html>
