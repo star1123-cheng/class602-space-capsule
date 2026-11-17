@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>六年級挑戰站</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px 16px 96px;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      margin: 0;
+      font-family: var(--hand);
+      font-weight: 400;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+
+    .who {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .seat-chip {
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .stage-tag {
+      display: inline-block;
+      margin-bottom: 4px;
+      padding: 2px 12px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      font-family: var(--hand);
+      font-weight: 400;
+      font-size: clamp(28px, 6vw, 38px);
+      line-height: 1.25;
+    }
+
+    .lead { margin: 0 0 20px; color: var(--muted); }
+
+    .panel {
+      margin-bottom: 22px;
+      padding: 20px;
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 2px solid var(--line);
+    }
+
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    /* 加入課堂 */
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .seat-btn {
+      min-height: 60px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+      background: var(--card);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .seat-btn[aria-pressed="true"] {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .code-row { display: flex; gap: 10px; }
+
+    .code-row .field {
+      flex: 1;
+      letter-spacing: .4em;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    /* 輸入區 */
+    .composer { display: grid; gap: 8px; }
+    .composer-row { display: flex; gap: 10px; align-items: stretch; }
+    .composer-row .field { flex: 1; min-width: 0; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+    .chip {
+      min-height: 40px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 2px dashed var(--line);
+      background: transparent;
+      font-size: 16px;
+    }
+
+    .chip[aria-pressed="true"] {
+      border-style: solid;
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .hint { margin: 0; font-size: 15px; color: var(--muted); }
+
+    .mine-list { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; }
+
+    .mine-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .mine-list .note { flex: 1; font-size: 20px; }
+    .mine-list .note small { display: block; font-family: var(--sans); font-size: 13px; color: var(--muted); }
+
+    .empty-mine { margin: 0; color: var(--muted); font-size: 16px; }
+
+    .cloud.mini { height: 260px; border-radius: 12px; background: var(--paper); }
+
+    /* 選挑戰 */
+    .pick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .pick {
+      min-height: 64px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+      background: var(--card);
+      font-family: var(--hand);
+      font-size: 21px;
+      line-height: 1.25;
+      text-align: left;
+    }
+
+    .pick small { display: block; font-family: var(--sans); font-size: 13px; color: var(--muted); }
+
+    .pick[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: #fff1e8;
+      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+
+    /* 投票 */
+    .vote-left {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      margin: 0 -16px 16px;
+      padding: 10px 16px;
+      background: var(--paper);
+      border-bottom: 2px solid var(--line);
+      font-weight: 700;
+    }
+
+    .ballots { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: -3px; }
+    .ballot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--accent); }
+    .ballot.used { background: var(--accent); }
+
+    .group { margin-bottom: 24px; }
+
+    .group-title {
+      margin: 0 0 10px;
+      font-family: var(--hand);
+      font-weight: 400;
+      font-size: 24px;
+    }
+
+    .group-title::before { content: '挑戰｜'; font-family: var(--sans); font-size: 15px; color: var(--muted); }
+
+    .idea-list { display: grid; gap: 12px; }
+
+    .idea-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .idea-card .note { flex: 1; font-size: 21px; }
+
+    .vote-btn {
+      flex: none;
+      width: 76px;
+      min-height: 64px;
+      border-radius: 14px;
+      border: 2px solid var(--accent);
+      background: var(--card);
+      color: var(--accent);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .vote-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+    .vote-btn .icon { display: block; font-size: 24px; }
+
+    .mine-tag {
+      flex: none;
+      width: 76px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* 回饋 */
+    .capsule-step {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 14px;
+      align-items: start;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .capsule-step li { display: contents; }
+
+    .capsule-step li::before {
+      counter-increment: step;
+      content: counter(step);
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--paper);
+      font-weight: 700;
+    }
+
+    .try-list { display: grid; gap: 8px; margin-bottom: 14px; }
+
+    .try {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 56px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+      background: var(--card);
+      text-align: left;
+      font-family: var(--hand);
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .try small { display: block; font-family: var(--sans); font-size: 13px; color: var(--muted); }
+    .try .votes { margin-left: auto; flex: none; font-family: var(--sans); font-size: 14px; color: var(--muted); }
+
+    .try[aria-pressed="true"] {
+      border-color: var(--good);
+      background: #ebf7ee;
+      box-shadow: inset 0 0 0 2px var(--good);
+    }
+
+    .saved-note { margin: 10px 0 0; color: var(--good); font-weight: 700; }
+
+    .center-msg {
+      padding: 60px 8px;
+      text-align: center;
+    }
+
+    .center-msg .big {
+      display: block;
+      margin-bottom: 10px;
+      font-family: var(--hand);
+      font-size: clamp(30px, 7vw, 44px);
+      line-height: 1.3;
+    }
+
+    .center-msg p { color: var(--muted); }
+
+    .pulse {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: var(--good);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse { 50% { opacity: .25; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="top">
+      <h1 class="brand">六年級挑戰站</h1>
+      <div class="who" id="who" hidden>
+        <span class="seat-chip" id="seatChip"></span>
+        <button class="btn small" id="leaveBtn" type="button">換人</button>
+      </div>
+    </header>
+    <div id="app"></div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const SEATS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '13', '14', '15', '16', '17'];
+    const CHALLENGE_EXAMPLES = ['功課變多', '考試壓力', '時間不夠用', '上台報告', '早上爬不起來', '和同學相處', '當學長姐的責任', '要準備上國中'];
+    const POLL_MS = 5000;
+    const store = safeStorage('sessionStorage');
+    const app = document.getElementById('app');
+
+    let me = loadMe();
+    let state = null;
+    let renderedStage = '';
+    let pollTimer = null;
+    let busy = false;
+    let pickedChallenge = '';
+    let pickedTry = '';
+
+    function loadMe() {
+      try {
+        return JSON.parse((store && store.getItem('challenge-me')) || 'null');
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveMe(value) {
+      me = value;
+      if (!store) return;
+      if (value) store.setItem('challenge-me', JSON.stringify(value));
+      else store.removeItem('challenge-me');
+    }
+
+    /* ---------- 加入課堂 ---------- */
+    function renderJoin(message) {
+      stopPolling();
+      renderedStage = '';
+      document.getElementById('who').hidden = true;
+      let chosen = '';
+      const seatButtons = SEATS.map(function(seat) {
+        return el('button', {
+          class: 'seat-btn', type: 'button', 'aria-pressed': 'false',
+          onclick: function() {
+            chosen = seat;
+            seatButtons.forEach(function(b) { b.setAttribute('aria-pressed', String(b === this)); }, this);
+            code.focus();
+          }
+        }, [seat]);
+      });
+      const code = el('input', { class: 'field', inputmode: 'numeric', maxlength: '4', autocomplete: 'off', placeholder: '0000', 'aria-label': '課堂代碼' });
+      const joinBtn = el('button', { class: 'btn primary', type: 'submit' }, ['加入']);
+      const form = el('form', {
+        onsubmit: function(e) {
+          e.preventDefault();
+          if (!chosen) return toast('先點選你的座號。', true);
+          if (!/^\d{4}$/.test(code.value)) return toast('課堂代碼是 4 位數字，請看投影幕。', true);
+          joinBtn.disabled = true;
+          callApi({ action: 'join', seat: chosen, code: code.value })
+            .then(function(res) {
+              saveMe({ seat: chosen, code: code.value });
+              start(res);
+            })
+            .catch(function(err) { toast(err.message, true); })
+            .finally(function() { joinBtn.disabled = false; });
+        }
+      }, [
+        el('h3', { text: '1. 點選你的座號' }),
+        el('div', { class: 'seat-grid' }, seatButtons),
+        el('h3', { text: '2. 輸入投影幕上的課堂代碼' }),
+        el('div', { class: 'code-row' }, [code, joinBtn])
+      ]);
+
+      app.replaceChildren(
+        el('span', { class: 'stage-tag', text: '加入課堂' }),
+        el('h2', { text: '升上六年級，我們一起想辦法' }),
+        el('p', { class: 'lead', text: message || '你寫的內容會匿名出現在投影幕上，大家只會看到文字，不會看到座號。' }),
+        el('div', { class: 'panel' }, [form])
+      );
+    }
+
+    function start(res) {
+      document.getElementById('who').hidden = false;
+      document.getElementById('seatChip').textContent = me.seat + ' 號';
+      apply(res);
+      startPolling();
+    }
+
+    /* ---------- 和後端同步 ---------- */
+    function startPolling() {
+      stopPolling();
+      pollTimer = setInterval(refresh, POLL_MS);
+    }
+
+    function stopPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = null;
+    }
+
+    function refresh() {
+      if (!me || busy || document.hidden) return;
+      callApi({ action: 'studentState', seat: me.seat, code: me.code })
+        .then(apply)
+        .catch(handleError);
+    }
+
+    /** 送出動作：成功後用後端回傳的最新狀態更新畫面 */
+    function act(payload, button, okMessage) {
+      if (busy) return Promise.resolve(false);
+      busy = true;
+      if (button) button.disabled = true;
+      return callApi(Object.assign({ seat: me.seat, code: me.code }, payload))
+        .then(function(res) {
+          apply(res);
+          if (okMessage) toast(okMessage);
+          return true;
+        })
+        .catch(function(err) {
+          handleError(err);
+          return false;
+        })
+        .finally(function() {
+          busy = false;
+          if (button) button.disabled = false;
+        });
+    }
+
+    function handleError(err) {
+      if (err.code === 'BAD_CODE') {
+        saveMe(null);
+        renderJoin('老師換了新的課堂代碼，請重新輸入投影幕上的數字。');
+        return;
+      }
+      if (err.code === 'STAGE') refresh();
+      toast(err.message, true);
+    }
+
+    function apply(res) {
+      state = res;
+      if (state.stage !== renderedStage) {
+        renderedStage = state.stage;
+        pickedChallenge = '';
+        renderStage();
+      } else {
+        updateDynamic();
+      }
+    }
+
+    /* ---------- 各階段畫面 ---------- */
+    const views = {};
+
+    function renderStage() {
+      const info = STAGE_INFO[state.stage];
+      const view = views[state.stage];
+      app.replaceChildren(el('span', { class: 'stage-tag', text: info.short }), el('h2', { text: info.title }));
+      view.build();
+      updateDynamic();
+    }
+
+    function updateDynamic() {
+      const view = views[state.stage];
+      if (view.update) view.update();
+    }
+
+    views.waiting = {
+      build: function() {
+        app.appendChild(el('div', { class: 'center-msg' }, [
+          el('span', { class: 'big', text: '你已經加入課堂了！' }),
+          el('p', {}, [el('span', { class: 'pulse' }), '等老師開始活動，畫面會自動換頁。'])
+        ]));
+      }
+    };
+
+    views.challenge = {
+      build: function() {
+        const limit = state.limit;
+        app.appendChild(el('p', { class: 'lead', text: '升上六年級以後，有什麼事讓你覺得困難、有壓力，或是不知道怎麼辦？用短短幾個字寫下來，最多 ' + limit.CHALLENGE_COUNT + ' 個。' }));
+
+        const input = el('input', { class: 'field', maxlength: String(limit.CHALLENGE_LENGTH), placeholder: '例如：功課變多', 'aria-label': '我遇到的挑戰', enterkeyhint: 'send' });
+        const counter = el('div', { class: 'counter' });
+        const sendBtn = el('button', { class: 'btn primary', type: 'submit' }, ['送出']);
+        bindCounter(input, counter, limit.CHALLENGE_LENGTH);
+        const chips = CHALLENGE_EXAMPLES.map(function(text) {
+          return el('button', { class: 'chip', type: 'button', onclick: function() { input.value = text; input.dispatchEvent(new Event('input')); input.focus(); } }, [text]);
+        });
+        const form = el('form', {
+          class: 'composer',
+          onsubmit: function(e) {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text) return toast('先寫下一個挑戰。', true);
+            act({ action: 'addChallenge', text: text }, sendBtn, '送出了！看看投影幕上的文字雲').then(function(done) {
+              if (done) { input.value = ''; input.dispatchEvent(new Event('input')); }
+            });
+          }
+        }, [
+          el('div', { class: 'composer-row' }, [input, sendBtn]),
+          counter,
+          el('p', { class: 'hint', text: '想不到怎麼寫？點一下參考詞，也可以改成自己的說法：' }),
+          el('div', { class: 'chips' }, chips)
+        ]);
+
+        this.mine = el('ul', { class: 'mine-list' });
+        this.cloud = el('div', { class: 'cloud mini', 'aria-label': '全班的挑戰文字雲' });
+        this.form = form;
+        app.append(
+          el('div', { class: 'panel' }, [form]),
+          el('div', { class: 'panel' }, [el('h3', { id: 'mineTitle' }), this.mine]),
+          el('div', { class: 'panel' }, [el('h3', { text: '全班的挑戰（越大代表越多人寫）' }), this.cloud])
+        );
+        this.lastCloud = null;
+      },
+      update: function() {
+        const limit = state.limit;
+        const count = state.myChallenges.length;
+        document.getElementById('mineTitle').textContent = '我寫的挑戰（' + count + ' / ' + limit.CHALLENGE_COUNT + '）';
+        this.form.querySelector('button[type="submit"]').disabled = count >= limit.CHALLENGE_COUNT;
+        renderMine(this.mine, state.myChallenges.map(function(c) { return { id: c.id, text: c.text }; }), 'challenge', '還沒有送出挑戰。');
+        if (!sameData(this.lastCloud, state.cloud)) {
+          this.lastCloud = state.cloud;
+          drawCloud(this.cloud, state.cloud, { minSize: 16, maxSize: 44, emptyText: '你可以當第一個送出的人！' });
+        }
+      }
+    };
+
+    views.idea = {
+      build: function() {
+        const limit = state.limit;
+        app.appendChild(el('p', { class: 'lead', text: '從全班最多人遇到的挑戰裡選一個，想一個「做得到」的方法幫大家。最多寫 ' + limit.IDEA_COUNT + ' 個方法。' }));
+
+        this.picks = el('div', { class: 'pick-grid', role: 'group', 'aria-label': '選一個挑戰' });
+        const input = el('textarea', { class: 'field', maxlength: String(limit.IDEA_LENGTH), placeholder: '例如：回家先寫最難的一科，寫完再休息', 'aria-label': '我想到的方法' });
+        const counter = el('div', { class: 'counter' });
+        bindCounter(input, counter, limit.IDEA_LENGTH);
+        const sendBtn = el('button', { class: 'btn primary', type: 'submit' }, ['送出方法']);
+        this.target = el('p', { class: 'hint' });
+        const form = el('form', {
+          class: 'composer',
+          onsubmit: function(e) {
+            e.preventDefault();
+            if (!pickedChallenge) return toast('先在上面選一個挑戰。', true);
+            const text = input.value.trim();
+            if (!text) return toast('寫下你想到的方法再送出。', true);
+            act({ action: 'addIdea', challenge: pickedChallenge, text: text }, sendBtn, '方法送出了！').then(function(done) {
+              if (done) { input.value = ''; input.dispatchEvent(new Event('input')); }
+            });
+          }
+        }, [this.target, input, counter, el('div', {}, [sendBtn])]);
+        this.sendBtn = sendBtn;
+        this.mine = el('ul', { class: 'mine-list' });
+
+        app.append(
+          el('div', { class: 'panel' }, [el('h3', { text: '1. 我想幫忙解決的挑戰' }), this.picks]),
+          el('div', { class: 'panel' }, [el('h3', { text: '2. 我想到的方法' }), form]),
+          el('div', { class: 'panel' }, [el('h3', { id: 'mineTitle' }), this.mine])
+        );
+        this.lastFocus = null;
+      },
+      update: function() {
+        const self = this;
+        const limit = state.limit;
+        if (!sameData(this.lastFocus, state.focus)) {
+          this.lastFocus = state.focus;
+          if (pickedChallenge && !state.focus.some(function(c) { return c.label === pickedChallenge; })) pickedChallenge = '';
+          this.picks.replaceChildren.apply(this.picks, state.focus.length ? state.focus.map(function(c) {
+            return el('button', {
+              class: 'pick', type: 'button', 'aria-pressed': String(c.label === pickedChallenge),
+              onclick: function() {
+                pickedChallenge = c.label;
+                self.picks.querySelectorAll('.pick').forEach(function(b) { b.setAttribute('aria-pressed', String(b === this)); }, this);
+                self.target.textContent = '要解決的挑戰：「' + c.label + '」';
+              }
+            }, [c.label, el('small', { text: c.count + ' 人寫' })]);
+          }) : [el('p', { class: 'empty-mine', text: '還沒有挑戰可以選，請等老師。' })]);
+        }
+        this.target.textContent = pickedChallenge ? '要解決的挑戰：「' + pickedChallenge + '」' : '先在上面選一個挑戰。';
+        const count = state.myIdeas.length;
+        document.getElementById('mineTitle').textContent = '我寫的方法（' + count + ' / ' + limit.IDEA_COUNT + '）';
+        this.sendBtn.disabled = count >= limit.IDEA_COUNT;
+        renderMine(this.mine, state.myIdeas.map(function(i) { return { id: i.id, text: i.text, sub: '解決：' + i.challenge }; }), 'idea', '還沒有送出方法。');
+      }
+    };
+
+    views.vote = {
+      build: function() {
+        app.appendChild(el('p', { class: 'lead', text: '看看同學想到的方法，選出你覺得「最有用、最做得到」的 ' + state.limit.VOTE_COUNT + ' 個。再按一次可以收回。' }));
+        this.left = el('div', { class: 'vote-left' });
+        this.board = el('div');
+        app.append(this.left, this.board);
+        this.lastIdeas = null;
+      },
+      update: function() {
+        const max = state.limit.VOTE_COUNT;
+        const used = state.myVotes.length;
+        this.left.replaceChildren('還剩 ' + (max - used) + ' 票', el('span', { class: 'ballots', 'aria-hidden': 'true' },
+          Array.from({ length: max }, function(_, i) { return el('span', { class: 'ballot' + (i < used ? ' used' : '') }); })));
+
+        const ideasKey = state.ideas.map(function(i) { return i.id; }).concat(state.myVotes);
+        if (sameData(this.lastIdeas, ideasKey)) return;
+        this.lastIdeas = ideasKey;
+
+        const groups = groupByChallenge(state.ideas);
+        if (!groups.length) {
+          this.board.replaceChildren(el('p', { class: 'empty-mine', text: '還沒有方法可以投票。' }));
+          return;
+        }
+        this.board.replaceChildren.apply(this.board, groups.map(function(g) {
+          return el('section', { class: 'group' }, [
+            el('h3', { class: 'group-title', text: g.challenge }),
+            el('div', { class: 'idea-list' }, g.ideas.map(function(idea) {
+              const voted = state.myVotes.indexOf(idea.id) !== -1;
+              const side = idea.mine
+                ? el('span', { class: 'mine-tag', text: '我寫的' })
+                : el('button', {
+                    class: 'vote-btn', type: 'button', 'aria-pressed': String(voted),
+                    'aria-label': (voted ? '收回投給「' : '投給「') + idea.text + '」',
+                    onclick: function(e) { act({ action: 'toggleVote', ideaId: idea.id }, e.currentTarget); }
+                  }, [el('span', { class: 'icon', 'aria-hidden': 'true', text: voted ? '★' : '☆' }), voted ? '已投' : '投票']);
+              return el('div', { class: 'idea-card' }, [el('div', { class: 'note', text: idea.text }), side]);
+            }))
+          ]);
+        }));
+      }
+    };
+
+    views.message = {
+      build: function() {
+        app.appendChild(el('p', { class: 'lead', text: '把今天想到的好方法，變成給同學的打氣。' }));
+
+        app.appendChild(el('div', { class: 'panel' }, [
+          el('h3', { text: '第一步：寫信給同學' }),
+          el('ol', { class: 'capsule-step' }, [
+            el('li', {}, [el('span', { text: '拿出老師發的「時空膠囊」QR 卡，用平板掃描。' })]),
+            el('li', {}, [el('span', { text: '選一位同學，寫下你看見對方的努力，或送對方一個今天的好方法。' })]),
+            el('li', {}, [el('span', { text: '寫完記得按「關閉信箱」，再回到這一頁完成第二步。' })])
+          ])
+        ]));
+
+        this.tries = el('div', { class: 'try-list', role: 'group', 'aria-label': '我要試試看的方法' });
+        const input = el('textarea', { class: 'field', maxlength: String(state.limit.FEEDBACK_LENGTH), placeholder: '例如：我想先從每天整理書包開始。', 'aria-label': '一句話心得' });
+        const counter = el('div', { class: 'counter' });
+        bindCounter(input, counter, state.limit.FEEDBACK_LENGTH);
+        const sendBtn = el('button', { class: 'btn primary', type: 'submit' }, ['送出回饋']);
+        this.saved = el('p', { class: 'saved-note', hidden: true });
+        this.input = input;
+        const form = el('form', {
+          class: 'composer',
+          onsubmit: function(e) {
+            e.preventDefault();
+            if (!pickedTry) return toast('先選一個你想試試看的方法。', true);
+            act({ action: 'saveFeedback', ideaId: pickedTry, text: input.value.trim() }, sendBtn, '收到你的回饋了！');
+          }
+        }, [
+          el('h3', { text: '第二步：這週我要試試看的方法' }),
+          this.tries,
+          el('h3', { text: '一句話心得（可不寫）' }),
+          input, counter,
+          el('div', {}, [sendBtn]),
+          this.saved
+        ]);
+        app.appendChild(el('div', { class: 'panel' }, [form]));
+        this.lastIdeas = null;
+        pickedTry = state.myFeedback ? state.myFeedback.ideaId : '';
+        if (state.myFeedback) input.value = state.myFeedback.text || '';
+        input.dispatchEvent(new Event('input'));
+      },
+      update: function() {
+        const self = this;
+        if (state.myFeedback) {
+          this.saved.hidden = false;
+          this.saved.textContent = '✓ 已送出。想改的話，重新選擇後再送出一次就好。';
+        }
+        const sorted = state.ideas.slice().sort(function(a, b) { return b.votes - a.votes; });
+        const key = sorted.map(function(i) { return i.id + ':' + i.votes; });
+        if (sameData(this.lastIdeas, key)) return;
+        this.lastIdeas = key;
+        this.tries.replaceChildren.apply(this.tries, sorted.length ? sorted.map(function(idea) {
+          return el('button', {
+            class: 'try', type: 'button', 'aria-pressed': String(idea.id === pickedTry),
+            onclick: function() {
+              pickedTry = idea.id;
+              self.tries.querySelectorAll('.try').forEach(function(b) { b.setAttribute('aria-pressed', String(b === this)); }, this);
+            }
+          }, [el('span', {}, [idea.text, el('small', { text: '解決：' + idea.challenge })]), el('span', { class: 'votes', text: '★ ' + idea.votes })]);
+        }) : [el('p', { class: 'empty-mine', text: '還沒有方法可以選。' })]);
+      }
+    };
+
+    views.closed = {
+      build: function() {
+        app.appendChild(el('div', { class: 'center-msg' }, [
+          el('span', { class: 'big', text: '謝謝你今天的分享！' }),
+          el('p', { text: '挑戰不可怕，我們有彼此，也有方法。可以把平板交還給老師了。' })
+        ]));
+      }
+    };
+
+    /* ---------- 小工具 ---------- */
+    function renderMine(list, items, kind, emptyText) {
+      if (!items.length) {
+        list.replaceChildren(el('li', {}, [el('p', { class: 'empty-mine', text: emptyText })]));
+        return;
+      }
+      list.replaceChildren.apply(list, items.map(function(item) {
+        return el('li', {}, [
+          el('div', { class: 'note' }, [item.text, item.sub ? el('small', { text: item.sub }) : null]),
+          el('button', {
+            class: 'btn small', type: 'button', 'aria-label': '刪除「' + item.text + '」',
+            onclick: function(e) {
+              if (!confirm('要刪掉「' + item.text + '」嗎？')) return;
+              act({ action: 'deleteMine', kind: kind, id: item.id }, e.currentTarget, '已刪除');
+            }
+          }, ['刪除'])
+        ]);
+      }));
+    }
+
+    function groupByChallenge(ideas) {
+      const order = [];
+      const map = {};
+      ideas.forEach(function(idea) {
+        if (!map[idea.challenge]) { map[idea.challenge] = []; order.push(idea.challenge); }
+        map[idea.challenge].push(idea);
+      });
+      return order.map(function(challenge) { return { challenge: challenge, ideas: map[challenge] }; });
+    }
+
+    document.getElementById('leaveBtn').addEventListener('click', function() {
+      if (!confirm('要登出，換下一位同學使用嗎？')) return;
+      saveMe(null);
+      renderJoin();
+    });
+
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) refresh(); });
+
+    // 開啟頁面：之前加入過就直接回到課堂
+    if (me) {
+      callApi({ action: 'join', seat: me.seat, code: me.code }).then(start).catch(function(err) {
+        saveMe(null);
+        renderJoin(err.code === 'BAD_CODE' ? '老師換了新的課堂代碼，請重新加入。' : '');
+      });
+    } else {
+      renderJoin();
+    }
+  </script>
+</body>
+</html>
