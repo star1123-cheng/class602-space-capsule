@@ -26,6 +26,23 @@ function seatLabel(seat) {
   return seat === '導師' ? '導師' : `${seat} 號`;
 }
 
+// 本班座號（沒有 12 號）
+const CLASS_SEATS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '13', '14', '15', '16', '17'];
+
+/* 同學寫的信：收進回憶集，但不放進給家長的 A4 手寫信紙 */
+function isClassmateLetter(m) {
+  return m.senderType === '同學';
+}
+
+function familyLetters(list) {
+  return list.filter(m => !isClassmateLetter(m));
+}
+
+// 家人的信排前面，同學的信排後面（同類維持原本順序）
+function sortLetters(list) {
+  return list.slice().sort((a, b) => isClassmateLetter(a) - isClassmateLetter(b));
+}
+
 /* ---------- 後端連線 ---------- */
 async function capsuleApi(payload) {
   if (CAPSULE_DEMO) return demoApi(payload);
@@ -58,8 +75,15 @@ async function capsuleApi(payload) {
 }
 
 /* ---------- 示範資料（全部為虛構內容） ---------- */
-const DEMO_SEATS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '13', '14', '15', '16', '17'];
 const DEMO_MESSAGES = [
+  {
+    id: 'demo-5', seatNumber: '07', parentSign: '13 號同學', senderType: '同學', senderSeat: '13', timestamp: '2026-11-17 09:10', replyText: '', replyTime: '',
+    message: '謝謝你上次借我直尺，還陪我把數學題目弄懂。六年級也要一起加油！'
+  },
+  {
+    id: 'demo-6', seatNumber: '03', parentSign: '07 號同學', senderType: '同學', senderSeat: '07', timestamp: '2026-11-17 09:30', replyText: '', replyTime: '',
+    message: '還記得我們一起顧班上的植物嗎？謝謝你每次都提醒我澆水。'
+  },
   {
     id: 'demo-1', seatNumber: '07', parentSign: '愛你的媽媽', timestamp: '2026-09-12 09:20', replyText: '', replyTime: '',
     message: '這五年，我看見你從不敢舉手，到現在會主動幫同學解題。\n升上六年級，功課一定更多，但媽媽相信你能找到自己的步調。累了就回家，我們永遠是你的補給站。'
@@ -82,13 +106,31 @@ const demoState = { messages: DEMO_MESSAGES.map(m => ({ ...m })) };
 function demoApi(payload) {
   const tokenSeat = String(payload.token || '').replace(/^demo/, '');
   const mine = () => demoState.messages.filter(m => m.seatNumber === tokenSeat);
+  const mySent = () => demoState.messages.filter(m => isClassmateLetter(m) && m.senderSeat === tokenSeat);
 
-  if (payload.action === 'getMyMessages') {
-    if (!DEMO_SEATS.includes(tokenSeat)) {
-      const err = new Error('這張 QR code 已失效，請向老師索取新的。');
-      err.code = 'INVALID_TOKEN';
-      throw err;
+  if (['getMyMessages', 'getMySent', 'saveClassmateMessage'].includes(payload.action) && !CLASS_SEATS.includes(tokenSeat)) {
+    const err = new Error('這張 QR code 已失效，請向老師索取新的。');
+    err.code = 'INVALID_TOKEN';
+    throw err;
+  }
+
+  if (payload.action === 'getMySent') {
+    return {
+      status: 'success', seatNumber: tokenSeat, unlockAt: '2026-12-31T12:00:00+08:00',
+      sent: mySent().map(m => ({ toSeat: m.seatNumber, message: m.message, updatedAt: m.timestamp }))
+    };
+  }
+  if (payload.action === 'saveClassmateMessage') {
+    let row = mySent().find(m => m.seatNumber === payload.toSeat);
+    if (!row) {
+      row = { id: `demo-${Date.now()}`, seatNumber: payload.toSeat, parentSign: `${tokenSeat} 號同學`, senderType: '同學', senderSeat: tokenSeat, replyText: '', replyTime: '' };
+      demoState.messages.push(row);
     }
+    row.message = payload.message;
+    row.timestamp = '2026-11-17 10:00';
+    return { status: 'success', toSeat: payload.toSeat, updatedAt: row.timestamp };
+  }
+  if (payload.action === 'getMyMessages') {
     if (new URLSearchParams(location.search).get('locked') === '1') {
       return { status: 'success', locked: true, unlockAt: '2026-12-31T12:00:00+08:00', seatNumber: tokenSeat, messageCount: mine().length };
     }
@@ -104,7 +146,7 @@ function demoApi(payload) {
     return {
       status: 'success',
       unlockAt: '2026-12-31T12:00:00+08:00',
-      students: DEMO_SEATS.map(seat => ({ seat, token: `demo${seat}` })),
+      students: CLASS_SEATS.map(seat => ({ seat, token: `demo${seat}` })),
       messages: demoState.messages.map(m => ({ ...m }))
     };
   }
@@ -230,8 +272,9 @@ function renderLetterSheets(root, seat, messages) {
   });
 }
 
-/* ---------- 回憶集：封面＋每則留言一頁（附學生回信） ---------- */
-function renderMemoryBook(root, seat, messages) {
+/* ---------- 回憶集：封面＋每則留言一頁（附學生回信）；家人的信在前、同學的信在後 ---------- */
+function renderMemoryBook(root, seat, list) {
+  const messages = sortLetters(list);
   root.appendChild(el('section', { class: 'sheet book-cover' }, [
     art(COVER_ART),
     el('div', { class: 'book-cover-text' }, [
@@ -248,7 +291,7 @@ function renderMemoryBook(root, seat, messages) {
     const page = el('section', { class: 'sheet book-page' }, [
       art(PAGE_ART),
       el('div', { class: 'book-page-inner' }, el('div', { class: 'book-content' }, [
-        el('div', { class: 'script book-title' }, 'A Letter from Home'),
+        el('div', { class: 'script book-title' }, isClassmateLetter(m) ? 'A Letter from a Classmate' : 'A Letter from Home'),
         el('p', { class: 'book-letter' }, m.message),
         el('p', { class: 'book-sign' }, m.timestamp ? `${m.parentSign}，${m.timestamp.slice(0, 10)}` : m.parentSign),
         m.replyText ? el('div', { class: 'book-reply' }, [

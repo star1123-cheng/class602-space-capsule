@@ -158,14 +158,15 @@
       return list.map(m => m.message + m.parentSign + m.replyText).join('');
     }
 
-    /* 全班輸出：只包含有收到信的座號，導師信排在最後 */
-    function seatsWithLetters() {
+    /* 全班輸出：只包含有收到信的座號，導師信排在最後；familyOnly 時只看家長的信（A4 信紙用） */
+    function seatsWithLetters(familyOnly) {
       const seats = students.map(s => s.seat).concat('導師');
-      return seats.filter(seat => messagesOf(seat).length > 0);
+      return seats.filter(seat => (familyOnly ? familyLetters(messagesOf(seat)) : messagesOf(seat)).length > 0);
     }
 
+    // A4 手寫信紙只放家長的信，同學的信只收進回憶集
     function printLetters(seats, title) {
-      printWith(root => seats.forEach(seat => renderLetterSheets(root, seat, messagesOf(seat))), allText(allMessages), title);
+      printWith(root => seats.forEach(seat => renderLetterSheets(root, seat, familyLetters(messagesOf(seat)))), allText(familyLetters(allMessages)), title);
     }
 
     function printBooks(seats, title) {
@@ -185,16 +186,18 @@
 
     function renderRow(seat, token) {
       const msgs = messagesOf(seat);
+      const family = familyLetters(msgs);
       const replied = msgs.filter(m => m.replyText).length;
       const empty = msgs.length === 0;
       const student = students.find(s => s.seat === seat);
 
       return el('tr', {}, [
         el('td', {}, seatLabel(seat)),
-        el('td', { class: 'num' }, `${msgs.length} 封`),
+        el('td', { class: 'num' }, `${family.length} 封`),
+        el('td', { class: 'num' }, `${msgs.length - family.length} 封`),
         el('td', { class: 'num' }, `${replied} 封`),
         el('td', {}, el('div', { class: 'actions' }, [
-          el('button', { disabled: empty, onclick: () => printLetters([seat], `${seatLabel(seat)}手寫信紙`) }, 'A4 信紙'),
+          el('button', { disabled: !family.length, onclick: () => printLetters([seat], `${seatLabel(seat)}手寫信紙`) }, 'A4 信紙'),
           el('button', { disabled: empty, onclick: () => printBooks([seat], `${seatLabel(seat)}回憶集`) }, '回憶集'),
           token ? el('button', { onclick: () => printWith(root => renderQrSheets(root, [student]), '', `${seatLabel(seat)} QR code`) }, 'QR code') : null,
           token ? el('button', { onclick: () => resetToken(seat) }, '重設') : null
@@ -204,18 +207,19 @@
 
     function renderDashboard(unlockAt) {
       const opensAt = new Date(unlockAt).toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Taipei' });
-      const seats = seatsWithLetters();
+      const seats = seatsWithLetters(false);
+      const familySeats = seatsWithLetters(true);
 
       app.replaceChildren(
         el('p', {}, `學生信箱開啟時間：${opensAt}。您在這裡不受時間限制。`),
         el('div', { class: 'bulk' }, [
           el('button', { class: 'primary', onclick: () => printWith(root => renderQrSheets(root, students), '', '全班 QR code') }, '列印全班 QR code'),
-          el('button', { class: 'primary', disabled: !seats.length, onclick: () => printLetters(seats, '全班手寫信紙') }, '列印全班 A4 信紙'),
+          el('button', { class: 'primary', disabled: !familySeats.length, onclick: () => printLetters(familySeats, '全班手寫信紙') }, '列印全班 A4 信紙'),
           el('button', { class: 'primary', disabled: !seats.length, onclick: () => printBooks(seats, '全班回憶集') }, '匯出全班回憶集')
         ]),
         el('div', { class: 'table-wrap' }, el('table', {}, [
           el('thead', {}, el('tr', {}, [
-            el('th', {}, '座號'), el('th', {}, '收到'), el('th', {}, '已回信'), el('th', {}, '輸出')
+            el('th', {}, '座號'), el('th', {}, '家長的信'), el('th', {}, '同學的信'), el('th', {}, '已回信'), el('th', {}, '輸出')
           ])),
           el('tbody', {}, students.map(s => renderRow(s.seat, s.token)).concat(renderRow('導師', null)))
         ]))

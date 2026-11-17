@@ -167,6 +167,20 @@
     }
 
     .btn-keep { background: #f6c453; color: #1d2452; }
+
+    a.btn-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 8px 22px;
+      border-radius: 24px;
+      text-decoration: none;
+    }
+
+    a.btn-link:focus-visible {
+      outline: 3px solid var(--marigold);
+      outline-offset: 2px;
+    }
     .btn-quiet { background: transparent; color: #eef1fc; border: 1.5px solid #8f99c7; }
 
     @media (prefers-reduced-motion: reduce) {
@@ -206,6 +220,11 @@
       showNotice('信箱已關閉，可以把平板交給下一位同學。');
     }
 
+    // 寫信給同學的網站：帶著同一組代碼過去，不用再掃一次
+    function writeLink() {
+      return el('a', { class: 'btn-link btn-keep', href: `classmates/${location.search}#t=${token}` }, '寫信給同學');
+    }
+
     function renderLocked(data) {
       const clock = el('strong', { class: 'count-down' });
       const target = new Date(data.unlockAt).getTime();
@@ -232,7 +251,10 @@
           clock,
           `${opensAt} 開啟`
         ]),
-        el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
+        el('div', { class: 'keep-actions' }, [
+          writeLink(),
+          el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
+        ])
       ]);
     }
 
@@ -279,14 +301,19 @@
 
     function renderLetters(data) {
       seat = data.seatNumber;
-      messages = data.messages;
-      const text = messages.map(m => m.message + m.parentSign + m.replyText).join('');
+      messages = sortLetters(data.messages);
+      // A4 手寫信紙只回覆家長的信
+      const family = familyLetters(messages);
+      const text = family.map(m => m.message + m.parentSign + m.replyText).join('');
 
       if (!messages.length) {
         showScreen([
           el('p', { class: 'who' }, `${seatLabel(seat)}的膠囊`),
           el('p', { class: 'notice' }, '膠囊裡還沒有信。可以請家人到班親會網站寫一封。'),
-          el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
+          el('div', { class: 'keep-actions' }, [
+            writeLink(),
+            el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
+          ])
         ]);
         return;
       }
@@ -305,10 +332,11 @@
                 `${seatLabel(seat)}回憶集`
               )
             }, '存成回憶集 PDF'),
-            el('button', {
+            family.length ? el('button', {
               class: 'btn-keep',
-              onclick: () => printWith(root => renderLetterSheets(root, seat, messages), text, `${seatLabel(seat)}手寫信紙`)
-            }, '列印手寫信紙'),
+              onclick: () => printWith(root => renderLetterSheets(root, seat, family), text, `${seatLabel(seat)}手寫信紙`)
+            }, '列印手寫信紙') : null,
+            writeLink(),
             el('button', { class: 'btn-quiet', onclick: closeMailbox }, '看完了，關閉信箱')
           ])
         ])

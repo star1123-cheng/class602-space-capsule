@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>寫信給同學</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Iansui&family=LXGW+WenKai+TC&family=Yellowtail&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../capsule-print.css" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--night);
+      background-image:
+        radial-gradient(1.4px 1.4px at 9% 14%, #f6c453, transparent),
+        radial-gradient(1px 1px at 72% 7%, #fff, transparent),
+        radial-gradient(1.2px 1.2px at 94% 38%, #fff, transparent),
+        radial-gradient(1px 1px at 4% 71%, #fff, transparent),
+        radial-gradient(1.4px 1.4px at 85% 88%, #f6c453, transparent);
+      background-attachment: fixed;
+      color: #eef1fc;
+      font-family: var(--hand);
+      font-size: 19px;
+      line-height: 1.7;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 36px 20px 64px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--script);
+      font-weight: 400;
+      font-size: clamp(42px, 8.5vw, 62px);
+      line-height: 1.1;
+      color: #f6c453;
+    }
+
+    .who { margin: 6px 0 4px; font-size: 22px; }
+    .hint { margin: 0 0 22px; color: #c9cff0; font-size: 17px; }
+    .notice { padding: 28px 4px; font-size: 22px; }
+
+    /* 選同學：已寄出的座號換成實心，一眼看出還有誰沒寫 */
+    .seats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .seat {
+      min-height: 64px;
+      padding: 6px 4px;
+      border: 1.5px solid #6e79ad;
+      border-radius: 14px;
+      background: transparent;
+      color: #eef1fc;
+      font: inherit;
+      line-height: 1.25;
+      cursor: pointer;
+    }
+
+    .seat small {
+      display: block;
+      font-size: 13px;
+      color: #c9cff0;
+    }
+
+    .seat.is-sent {
+      background: #f6c453;
+      border-color: #f6c453;
+      color: #1d2452;
+    }
+
+    .seat.is-sent small { color: #4a4320; }
+
+    .seat.is-active {
+      outline: 3px solid #fff;
+      outline-offset: 2px;
+    }
+
+    .seat[disabled] {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .compose {
+      padding: 26px 26px 22px;
+      background: #fff;
+      color: var(--ink);
+      border-radius: 3px;
+      margin-bottom: 28px;
+    }
+
+    .compose h2 {
+      margin: 0 0 12px;
+      font-weight: 400;
+      font-size: 24px;
+    }
+
+    .prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .prompt {
+      min-height: 40px;
+      padding: 4px 14px;
+      border: 1.5px solid var(--rule);
+      border-radius: 20px;
+      background: #f3f5fc;
+      color: var(--ink);
+      font: inherit;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 150px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--rule);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      resize: vertical;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 6px;
+      font-size: 16px;
+      color: var(--ink-soft);
+    }
+
+    .send-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .state { font-size: 16px; color: var(--ink-soft); }
+    .state.is-error { color: #b3261e; }
+
+    button.action,
+    a.action {
+      display: inline-flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 8px 22px;
+      border: 0;
+      border-radius: 24px;
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button.action[disabled] { opacity: .55; cursor: default; }
+
+    .btn-send { background: var(--ink); color: #fff; }
+    .btn-keep { background: #f6c453; color: #1d2452; }
+    .btn-quiet { background: transparent; color: #eef1fc; border: 1.5px solid #8f99c7 !important; }
+
+    .foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 22px;
+      border-top: 1px dashed #5a6596;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid var(--marigold);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <h1>Write to a Classmate</h1>
+    <p class="notice">正在準備信紙……</p>
+  </main>
+
+  <script src="../capsule-shared.js"></script>
+  <script>
+    /* 代碼放在網址 # 後面，和學生頁使用同一張 QR code 的代碼 */
+    const token = new URLSearchParams(location.hash.slice(1)).get('t') || '';
+    const app = document.getElementById('app');
+    const PROMPTS = ['謝謝你在', '我最欣賞你的地方是', '還記得我們一起', '升上國中以後，'];
+    const MAX_LENGTH = 300;
+
+    let me = '';
+    let unlockAt = '';
+    let sent = {};    // 已寄出：{ 收件座號: { message, updatedAt } }
+    let drafts = {};  // 還沒寄出的草稿，切換同學時不會不見
+    let current = '';
+
+    function showScreen(children) {
+      app.replaceChildren(el('h1', {}, 'Write to a Classmate'), ...children);
+    }
+
+    function showNotice(text) {
+      showScreen([el('p', { class: 'notice' }, text)]);
+    }
+
+    function closePage() {
+      // 用 replace 把含代碼的網址換掉，下一位同學按「上一頁」也回不到這裡
+      history.replaceState(null, '', location.pathname + location.search);
+      sent = {};
+      drafts = {};
+      showNotice('已關閉，可以把平板交給下一位同學。');
+    }
+
+    function seatButton(seat) {
+      const isMe = seat === me;
+      const done = Boolean(sent[seat]);
+      return el('button', {
+        class: `seat${done ? ' is-sent' : ''}${seat === current ? ' is-active' : ''}`,
+        disabled: isMe,
+        'aria-pressed': seat === current ? 'true' : 'false',
+        onclick: () => openCompose(seat)
+      }, [seatLabel(seat), el('small', {}, isMe ? '你自己' : done ? '已寄出' : '還沒寫')]);
+    }
+
+    function renderCompose() {
+      if (!current) return null;
+
+      const input = el('textarea', { id: 'letter', maxlength: String(MAX_LENGTH), 'aria-label': `寫給${seatLabel(current)}的信` });
+      input.value = drafts[current] !== undefined ? drafts[current] : (sent[current] ? sent[current].message : '');
+      const counter = el('span', {}, `${input.value.length} / ${MAX_LENGTH} 字`);
+      const state = el('span', { class: 'state' }, sent[current] ? `已寄出（${sent[current].updatedAt}），可以再修改` : '');
+      const send = el('button', { class: 'action btn-send' }, sent[current] ? '修改後重新寄出' : '寄出');
+
+      input.addEventListener('input', () => {
+        drafts[current] = input.value;
+        counter.textContent = `${input.value.length} / ${MAX_LENGTH} 字`;
+      });
+
+      const prompts = PROMPTS.map(text => el('button', {
+        class: 'prompt',
+        type: 'button',
+        onclick: () => {
+          const joiner = input.value && !input.value.endsWith('\n') ? '\n' : '';
+          input.value = (input.value + joiner + text).slice(0, MAX_LENGTH);
+          input.dispatchEvent(new Event('input'));
+          input.focus();
+        }
+      }, text));
+
+      send.addEventListener('click', async () => {
+        const text = input.value.trim();
+        state.classList.remove('is-error');
+        if (!text) {
+          state.classList.add('is-error');
+          state.textContent = '先寫下想說的話，再寄出。';
+          input.focus();
+          return;
+        }
+        const toSeat = current;
+        send.disabled = true;
+        state.textContent = '寄送中……';
+        try {
+          const saved = await capsuleApi({ action: 'saveClassmateMessage', token, toSeat, message: text });
+          sent[toSeat] = { message: text, updatedAt: saved.updatedAt };
+          delete drafts[toSeat];
+          render(`已寄給${seatLabel(toSeat)}。`);
+        } catch (e) {
+          state.classList.add('is-error');
+          state.textContent = `${e.message} 你寫的字還留在框裡。`;
+          send.disabled = false;
+        }
+      });
+
+      return el('section', { class: 'compose' }, [
+        el('h2', {}, `寫給${seatLabel(current)}`),
+        el('div', { class: 'prompts' }, prompts),
+        input,
+        el('div', { class: 'meta' }, [el('span', {}, `署名：${me} 號同學（對方看得到）`), counter]),
+        el('div', { class: 'send-row' }, [state, send])
+      ]);
+    }
+
+    function openCompose(seat) {
+      current = seat;
+      render();
+      const box = document.getElementById('letter');
+      if (box) {
+        box.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+        box.focus({ preventScroll: true });
+      }
+    }
+
+    function render(message) {
+      const opensAt = unlockAt
+        ? new Date(unlockAt).toLocaleString('zh-TW', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Taipei' })
+        : '';
+      const count = Object.keys(sent).length;
+      if (message) current = '';
+
+      showScreen([
+        el('p', { class: 'who' }, `我是 ${seatLabel(me)}，已經寫了 ${count} 封`),
+        el('p', { class: 'hint' }, message || `選一位同學寫信，每人一封，寄出後還能修改。${opensAt ? `信會在 ${opensAt} 和家人的信一起打開。` : ''}`),
+        el('div', { class: 'seats' }, CLASS_SEATS.concat('導師').map(seatButton)),
+        renderCompose(),
+        el('div', { class: 'foot' }, [
+          el('a', { class: 'action btn-keep', href: `../student.html${location.search}#t=${token}` }, '打開我的時空膠囊'),
+          el('button', { class: 'action btn-quiet', onclick: closePage }, '寫完了，關閉')
+        ])
+      ]);
+    }
+
+    async function load() {
+      if (!token) {
+        showNotice('請先用平板掃描老師發的 QR code，再按「寫信給同學」。');
+        return;
+      }
+      try {
+        const data = await capsuleApi({ action: 'getMySent', token });
+        me = data.seatNumber;
+        unlockAt = data.unlockAt;
+        data.sent.forEach(item => { sent[item.toSeat] = { message: item.message, updatedAt: item.updatedAt }; });
+        render();
+      } catch (e) {
+        showNotice(e.message);
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
