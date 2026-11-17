@@ -37,7 +37,13 @@ function callApi(payload) {
       return response.json();
     })
     .catch(function() {
-      throw new Error('連不上網路，請確認平板已連上 Wi-Fi 後再試一次。');
+      // 平板真的離線才說 Wi-Fi；有網路但後端太慢或回了別的頁面，是「忙線」
+      const offline = navigator.onLine === false;
+      const err = new Error(offline
+        ? '平板沒有連上網路，請確認 Wi-Fi 後再試一次。'
+        : '連線有點慢，請稍等一下再按一次。');
+      err.code = offline ? 'NETWORK' : 'BUSY';
+      throw err;
     })
     .then(function(res) {
       if (res && res.status === 'success') return res;
@@ -46,6 +52,50 @@ function callApi(payload) {
       throw err;
     })
     .finally(function() { clearTimeout(timer); });
+}
+
+/**
+ * 定時向後端要最新資料。
+ * - 上一次回來了才排下一次，網路慢時請求不會越疊越多。
+ * - 每台平板的間隔差一點點，避免全班同一秒一起問。
+ * - 背景同步偶爾失敗就安靜重試，連續失敗 3 次才提醒一次。
+ */
+function createPoller(intervalMs, task, onError) {
+  let timer = null;
+  let generation = 0;
+  let fails = 0;
+  let running = false;
+
+  function schedule(myGeneration) {
+    timer = setTimeout(function() {
+      run().then(function() {
+        if (myGeneration === generation) schedule(myGeneration);
+      });
+    }, intervalMs + Math.random() * 800);
+  }
+
+  function run() {
+    if (running || document.hidden) return Promise.resolve();
+    running = true;
+    return Promise.resolve()
+      .then(task)
+      .then(function() { fails = 0; })
+      .catch(function(err) {
+        if (err && (err.code === 'BUSY' || err.code === 'NETWORK')) {
+          fails++;
+          if (fails === 3) toast('連線有點慢，網頁會自動重試，不用重新整理。', true);
+          return;
+        }
+        onError(err);
+      })
+      .finally(function() { running = false; });
+  }
+
+  return {
+    start: function() { generation++; clearTimeout(timer); schedule(generation); },
+    stop: function() { generation++; clearTimeout(timer); timer = null; },
+    now: run
+  };
 }
 
 /**
@@ -146,7 +196,8 @@ function drawCloud(box, items, opts) {
     word.style.visibility = 'hidden';
     box.appendChild(word);
 
-    let size = minSize + (maxSize - minSize) * Math.sqrt(item.count / maxCount);
+    // 人數越多字越大；次方 0.8 讓「多人寫的」和「一人寫的」差距更明顯
+    let size = minSize + (maxSize - minSize) * Math.pow(item.count / maxCount, 0.8);
     for (let attempt = 0; attempt < 4; attempt++) {
       word.style.fontSize = size + 'px';
       const w = word.offsetWidth;

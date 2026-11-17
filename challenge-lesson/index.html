@@ -346,7 +346,6 @@
     let me = loadMe();
     let state = null;
     let renderedStage = '';
-    let pollTimer = null;
     let busy = false;
     let pickedChallenge = '';
     let pickedTry = '';
@@ -421,22 +420,14 @@
     }
 
     /* ---------- 和後端同步 ---------- */
-    function startPolling() {
-      stopPolling();
-      pollTimer = setInterval(refresh, POLL_MS);
-    }
+    const poller = createPoller(POLL_MS, function() {
+      if (!me || busy) return;
+      return callApi({ action: 'studentState', seat: me.seat, code: me.code }).then(apply);
+    }, function(err) { handleError(err); });
 
-    function stopPolling() {
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = null;
-    }
-
-    function refresh() {
-      if (!me || busy || document.hidden) return;
-      callApi({ action: 'studentState', seat: me.seat, code: me.code })
-        .then(apply)
-        .catch(handleError);
-    }
+    function startPolling() { poller.start(); }
+    function stopPolling() { poller.stop(); }
+    function refresh() { return poller.now(); }
 
     /** 送出動作：成功後用後端回傳的最新狀態更新畫面 */
     function act(payload, button, okMessage) {
@@ -466,6 +457,8 @@
         return;
       }
       if (err.code === 'STAGE') refresh();
+      // 連線慢時不確定有沒有送到，稍後同步一次，畫面會顯示真正的結果
+      if (err.code === 'BUSY' || err.code === 'NETWORK') setTimeout(refresh, 1500);
       toast(err.message, true);
     }
 

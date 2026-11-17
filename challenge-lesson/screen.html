@@ -370,7 +370,6 @@
 
     let key = (store && store.getItem('challenge-teacher')) || '';
     let state = null;
-    let pollTimer = null;
     let busy = false;
     let lastSignature = '';
     let drawerOpen = false;
@@ -444,18 +443,13 @@
       startPolling();
     }
 
-    function startPolling() {
-      stopPolling();
-      pollTimer = setInterval(function() {
-        if (busy || document.hidden) return;
-        callApi({ action: 'teacherState', key: key }).then(apply).catch(handleError);
-      }, POLL_MS);
-    }
+    const poller = createPoller(POLL_MS, function() {
+      if (busy) return;
+      return callApi({ action: 'teacherState', key: key }).then(apply);
+    }, function(err) { handleError(err); });
 
-    function stopPolling() {
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = null;
-    }
+    function startPolling() { poller.start(); }
+    function stopPolling() { poller.stop(); }
 
     function teacherAct(payload) {
       busy = true;

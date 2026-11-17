@@ -23,7 +23,7 @@
       ['17', '數學變難'], ['01', '考試壓力'], ['02', '時間不夠用'], ['03', '睡不飽'], ['05', '畢業旅行分組'], ['06', '功課變多']
     ];
     challengeSeed.forEach(function(pair) {
-      db.challenges.push({ id: id(), seat: pair[0], text: pair[1], label: pair[1], hidden: false });
+      db.challenges.push({ id: id(), seat: pair[0], text: pair[1], label: label(pair[1]), hidden: false });
     });
     const ideaSeed = [
       ['04', '功課變多', '回家先寫最難的一科，寫完再休息'],
@@ -71,8 +71,14 @@
     return String(val || '').replace(/\s+/g, ' ').trim().replace(/^[=+\-@\s]+/, '').substring(0, max);
   }
 
+  // 和 Code.gs 的 normalizeLabel 相同規則（示範用簡化版，不含「考試壓力大 → 考試壓力」的第二層合併）
   function label(text) {
-    return String(text).replace(/[\s，。、！？!?,.~～…]+/g, '') || text;
+    const ADJ = '多少難累忙煩大重晚早快慢長短高嚴緊吵亂';
+    let s = String(text || '').replace(/[\s，。、！？!?,.~～…]+/g, '').split('作業').join('功課');
+    s = s.replace(new RegExp('(?<=.)(?:變得|變|越來越|愈來愈)(?=(?:好|很|太|超級|超|非常|有點|特別|真的)?[' + ADJ + '])', 'g'), '');
+    s = s.replace(new RegExp('(?<=.)(?:好|很|太|超級|超|非常|有點|特別|真的)(?=[' + ADJ + '])', 'g'), '');
+    s = s.replace(/(?<=..)[了啦啊耶欸呀喔]+$/, '');
+    return s || String(text || '');
   }
 
   function cloudOf(db) {
