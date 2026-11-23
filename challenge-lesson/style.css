@@ -108,7 +108,8 @@ textarea.field { resize: vertical; min-height: 96px; line-height: 1.5; }
   background: var(--ink);
   color: var(--paper);
   font-weight: 500;
-  transform: translate(-50%, 140%);
+  /* 藏起來時往下移「自己的高度＋48px」，比離底部的 24px 多，不管幾行都不會露出一截 */
+  transform: translate(-50%, calc(100% + 48px));
   transition: transform .25s ease;
   pointer-events: none;
 }
