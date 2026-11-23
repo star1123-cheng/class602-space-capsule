@@ -233,9 +233,8 @@
     .vote-btn .icon { display: block; font-size: 24px; }
 
     .mine-tag {
-      flex: none;
-      width: 76px;
-      text-align: center;
+      display: block;
+      font-family: var(--sans);
       font-size: 14px;
       color: var(--muted);
     }
@@ -421,9 +420,15 @@
     }
 
     /* ---------- 和後端同步 ---------- */
+    // 畫面版本：每次自己按了按鈕就加 1。背景同步如果是「按之前」就送出的，回來時直接丟掉，
+    // 才不會把剛按好的畫面又蓋回舊的樣子（看起來像跳回去、lag）。
+    let stateEpoch = 0;
     const poller = createPoller(POLL_MS, function() {
-      if (!me || busy) return;
-      return callApi({ action: 'studentState', seat: me.seat, code: me.code }).then(apply);
+      if (!me || busy || votesPending) return;
+      const epoch = stateEpoch;
+      return callApi({ action: 'studentState', seat: me.seat, code: me.code }).then(function(res) {
+        if (epoch === stateEpoch && !busy && !votesPending) apply(res);
+      });
     }, function(err) { handleError(err); });
 
     function startPolling() { poller.start(); }
@@ -435,8 +440,10 @@
       if (busy) return Promise.resolve(false);
       busy = true;
       if (button) button.disabled = true;
+      stateEpoch++;
       return callApi(Object.assign({ seat: me.seat, code: me.code }, payload))
         .then(function(res) {
+          stateEpoch++;
           apply(res);
           if (okMessage) toast(okMessage);
           return true;
@@ -449,6 +456,52 @@
           busy = false;
           if (button) button.disabled = false;
         });
+    }
+
+    /**
+     * 投票：按下去星星馬上變，不用等後端。
+     * 連按好幾下會排隊依序送出；全部送完才用後端的結果校正一次。
+     * 有一次失敗就停下後面的，重新同步，讓畫面顯示真正的票。
+     */
+    let votesPending = 0;
+    let voteChain = Promise.resolve();
+    let voteFailed = null;
+    let voteLatest = null;
+
+    function toggleVote(ideaId) {
+      if (!state || state.stage !== 'vote') return;
+      const voted = state.myVotes.indexOf(ideaId) !== -1;
+      if (!voted && state.myVotes.length >= state.limit.VOTE_COUNT) {
+        toast('你的 ' + state.limit.VOTE_COUNT + ' 票都投完了，想換的話先收回一票。', true);
+        return;
+      }
+      state.myVotes = voted
+        ? state.myVotes.filter(function(id) { return id !== ideaId; })
+        : state.myVotes.concat(ideaId);
+      stateEpoch++;
+      updateDynamic();
+
+      votesPending++;
+      voteChain = voteChain.then(function() {
+        if (voteFailed) return;
+        return callApi({ action: 'toggleVote', seat: me.seat, code: me.code, ideaId: ideaId })
+          .then(function(res) { voteLatest = res; })
+          .catch(function(err) { voteFailed = err; });
+      }).then(function() {
+        votesPending--;
+        if (votesPending > 0) return;
+        const err = voteFailed;
+        const res = voteLatest;
+        voteFailed = null;
+        voteLatest = null;
+        stateEpoch++;
+        if (err) {
+          handleError(err);
+          refresh();
+        } else if (res) {
+          apply(res);
+        }
+      });
     }
 
     function handleError(err) {
@@ -611,7 +664,7 @@
 
     views.vote = {
       build: function() {
-        app.appendChild(el('p', { class: 'lead', text: '看看同學想到的方法，選出你覺得「最有用、最做得到」的 ' + state.limit.VOTE_COUNT + ' 個。再按一次可以收回。' }));
+        app.appendChild(el('p', { class: 'lead', text: '看看同學想到的方法，選出你覺得「最有用、最做得到」的 ' + state.limit.VOTE_COUNT + ' 個，也可以投給自己寫的方法。再按一次可以收回。' }));
         this.left = el('div', { class: 'vote-left' });
         this.board = el('div');
         app.append(this.left, this.board);
@@ -637,14 +690,13 @@
             el('h3', { class: 'group-title', text: g.challenge }),
             el('div', { class: 'idea-list' }, g.ideas.map(function(idea) {
               const voted = state.myVotes.indexOf(idea.id) !== -1;
-              const side = idea.mine
-                ? el('span', { class: 'mine-tag', text: '我寫的' })
-                : el('button', {
-                    class: 'vote-btn', type: 'button', 'aria-pressed': String(voted),
-                    'aria-label': (voted ? '收回投給「' : '投給「') + idea.text + '」',
-                    onclick: function(e) { act({ action: 'toggleVote', ideaId: idea.id }, e.currentTarget); }
-                  }, [el('span', { class: 'icon', 'aria-hidden': 'true', text: voted ? '★' : '☆' }), voted ? '已投' : '投票']);
-              return el('div', { class: 'idea-card' }, [el('div', { class: 'note', text: idea.text }), side]);
+              const btn = el('button', {
+                class: 'vote-btn', type: 'button', 'aria-pressed': String(voted),
+                'aria-label': (voted ? '收回投給「' : '投給「') + idea.text + '」',
+                onclick: function() { toggleVote(idea.id); }
+              }, [el('span', { class: 'icon', 'aria-hidden': 'true', text: voted ? '★' : '☆' }), voted ? '已投' : '投票']);
+              const note = el('div', { class: 'note' }, [idea.text, idea.mine ? el('small', { class: 'mine-tag', text: '我寫的' }) : null]);
+              return el('div', { class: 'idea-card' }, [note, btn]);
             }))
           ]);
         }));

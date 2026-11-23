@@ -182,7 +182,6 @@
       if (db.stage !== 'vote') fail('現在不是投票時間喔。', 'STAGE');
       const idea = db.ideas.filter(function(i) { return i.id === p.ideaId && !i.hidden; })[0];
       if (!idea) fail('找不到這個方法。');
-      if (idea.seat === seat) fail('自己的方法不能投給自己，留給別人投吧！');
       const existing = db.votes.findIndex(function(v) { return v.seat === seat && v.ideaId === p.ideaId; });
       if (existing !== -1) db.votes.splice(existing, 1);
       else {
