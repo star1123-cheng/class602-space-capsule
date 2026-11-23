@@ -339,6 +339,17 @@
       .welcome .qr { justify-self: center; }
       .cloud.big { height: 60vh; }
     }
+    /* 背景音樂播放器：只要聲音，不佔畫面 */
+    .music-host {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -416,7 +427,8 @@
         stage: el('section', { class: 'stage', 'aria-live': 'polite' }),
         tabs: el('div', { class: 'tabs', role: 'group', 'aria-label': '切換活動' }),
         drawer: el('aside', { class: 'drawer', 'aria-label': '整理挑戰' }),
-        tidyBtn: el('button', { class: 'btn', type: 'button', onclick: toggleDrawer }, ['整理挑戰'])
+        tidyBtn: el('button', { class: 'btn', type: 'button', onclick: toggleDrawer }, ['整理挑戰']),
+        musicBtn: el('button', { class: 'btn', type: 'button', 'aria-pressed': 'false', onclick: toggleMusic }, ['♪ 音樂'])
       };
 
       Object.keys(STAGE_INFO).forEach(function(stage) {
@@ -433,6 +445,7 @@
           el('footer', { class: 'controls' }, [
             refs.tabs,
             refs.tidyBtn,
+            refs.musicBtn,
             el('button', { class: 'btn', type: 'button', onclick: newCode }, ['換新代碼']),
             el('button', { class: 'btn', type: 'button', onclick: toggleFullscreen }, ['全螢幕']),
             el('button', { class: 'btn', type: 'button', onclick: clearAll }, ['清除資料'])
@@ -440,6 +453,7 @@
         ]),
         refs.drawer
       );
+      updateMusicBtn();
       apply(res);
       startPolling();
     }
@@ -720,6 +734,82 @@
       } else {
         toast('請按鍵盤上的 F11 進入全螢幕');
       }
+    }
+
+    /* ---------- 背景音樂（YouTube） ---------- */
+    // 第一次按「音樂」才載入 YouTube 播放器；沒按就完全不會連到 YouTube。
+    // 播放器放在 #root 外面，切換活動、畫面重畫都不會中斷音樂；播完會從頭再播。
+    const MUSIC_VIDEO_ID = '6PlqNnsW-II';
+    const MUSIC_VOLUME = 60;
+    const music = { player: null, ready: false, loading: false, playing: false };
+
+    function toggleMusic() {
+      if (music.ready) {
+        if (music.playing) music.player.pauseVideo();
+        else music.player.playVideo();
+        return;
+      }
+      if (music.loading) return;
+      music.loading = true;
+      updateMusicBtn('♪ 載入中…');
+      loadYouTubeApi().then(function(YT) {
+        const slot = el('div');
+        document.body.appendChild(el('div', { class: 'music-host', 'aria-hidden': 'true' }, [slot]));
+        music.player = new YT.Player(slot, {
+          width: 200,
+          height: 113,
+          videoId: MUSIC_VIDEO_ID,
+          playerVars: { autoplay: 1, controls: 0, playsinline: 1, rel: 0 },
+          events: {
+            onReady: function(e) {
+              music.ready = true;
+              music.loading = false;
+              e.target.setVolume(MUSIC_VOLUME);
+              e.target.playVideo();
+              updateMusicBtn();
+            },
+            onStateChange: function(e) {
+              if (e.data === YT.PlayerState.ENDED) {
+                e.target.seekTo(0);
+                e.target.playVideo();
+                return;
+              }
+              music.playing = e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING;
+              updateMusicBtn();
+            },
+            onError: function() {
+              music.loading = false;
+              music.playing = false;
+              updateMusicBtn();
+              toast('音樂無法播放，可能是影片被移除或不開放嵌入。', true);
+            }
+          }
+        });
+      }).catch(function() {
+        music.loading = false;
+        updateMusicBtn();
+        toast('連不到 YouTube，音樂暫時無法播放。', true);
+      });
+    }
+
+    let youTubeApi = null;
+    function loadYouTubeApi() {
+      if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+      if (youTubeApi) return youTubeApi;
+      youTubeApi = new Promise(function(resolve, reject) {
+        window.onYouTubeIframeAPIReady = function() { resolve(window.YT); };
+        const script = document.createElement('script');
+        script.src = 'https://www.youtube.com/iframe_api';
+        script.onerror = function() { youTubeApi = null; reject(new Error('YouTube 載入失敗')); };
+        document.head.appendChild(script);
+      });
+      return youTubeApi;
+    }
+
+    function updateMusicBtn(text) {
+      if (!refs.musicBtn) return;
+      refs.musicBtn.textContent = text || (music.playing ? '♪ 暫停音樂' : '♪ 音樂');
+      refs.musicBtn.setAttribute('aria-pressed', String(music.playing));
     }
 
     // 視窗大小改變時重排文字雲
