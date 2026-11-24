@@ -311,7 +311,7 @@
           el('p', { class: 'who' }, `${seatLabel(seat)}的膠囊`),
           el('p', { class: 'notice' }, '膠囊裡還沒有信。可以請家人到班親會網站寫一封。'),
           el('div', { class: 'keep-actions' }, [
-            writeLink(),
+            // 解鎖後不再開放寫信給同學，所以這裡不放「寫信給同學」
             el('button', { class: 'btn-quiet', onclick: closeMailbox }, '關閉信箱')
           ])
         ]);
@@ -336,7 +336,6 @@
               class: 'btn-keep',
               onclick: () => printWith(root => renderLetterSheets(root, seat, family), text, `${seatLabel(seat)}手寫信紙`)
             }, '列印手寫信紙') : null,
-            writeLink(),
             el('button', { class: 'btn-quiet', onclick: closeMailbox }, '看完了，關閉信箱')
           ])
         ])

@@ -116,7 +116,9 @@ function demoApi(payload) {
 
   if (payload.action === 'getMySent') {
     return {
-      status: 'success', seatNumber: tokenSeat, unlockAt: '2026-12-31T12:00:00+08:00',
+      status: 'success', seatNumber: tokenSeat,
+      // 網址加 &closed=1 可預覽「膠囊已打開、停止寫信」的畫面
+      unlockAt: new URLSearchParams(location.search).get('closed') === '1' ? '2026-11-25T00:00:00+08:00' : '2026-12-31T12:00:00+08:00',
       sent: mySent().map(m => ({ toSeat: m.seatNumber, message: m.message, updatedAt: m.timestamp }))
     };
   }

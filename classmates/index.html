@@ -338,6 +338,17 @@
         me = data.seatNumber;
         unlockAt = data.unlockAt;
         data.sent.forEach(item => { sent[item.toSeat] = { message: item.message, updatedAt: item.updatedAt }; });
+        // 膠囊打開後就不收同學的信（後端也會拒收），改成提示並帶回自己的膠囊
+        if (unlockAt && Date.now() >= new Date(unlockAt).getTime()) {
+          showScreen([
+            el('p', { class: 'notice' }, '膠囊已經打開，寫信給同學的活動結束囉！你寫的信都已經送到同學的膠囊裡了。'),
+            el('div', { class: 'foot' }, [
+              el('a', { class: 'action btn-keep', href: `../student.html${location.search}#t=${token}` }, '打開我的時空膠囊'),
+              el('button', { class: 'action btn-quiet', onclick: closePage }, '關閉')
+            ])
+          ]);
+          return;
+        }
         render();
       } catch (e) {
         showNotice(e.message);
