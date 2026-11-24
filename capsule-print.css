@@ -318,4 +318,11 @@
   .sheet:last-child {
     break-after: auto;
   }
+
+  /* iPad／iPhone 不理會上面的 margin: 0，會自己在四周加白邊（上下約 14mm），
+     原尺寸放不下會被切成兩頁；縮成 88% 並左右置中 */
+  html.print-shrink .sheet {
+    zoom: 0.88;
+    margin: 0 auto;
+  }
 }

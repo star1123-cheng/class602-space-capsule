@@ -330,6 +330,13 @@ function getPrintRoot() {
   return root;
 }
 
+// iPadOS 預設把自己偽裝成 Mac，所以再用「有觸控」來分辨
+function needsPrintShrink() {
+  if (new URLSearchParams(location.search).get('printfit') === '1') return true;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
 async function printWith(render, sampleText, title) {
   const root = getPrintRoot();
   root.replaceChildren();
@@ -342,6 +349,9 @@ async function printWith(render, sampleText, title) {
   } catch (e) {
     console.warn('字體載入失敗，改用系統字體：', e);
   }
+
+  // iPad／iPhone 列印會自己加白邊，每張要縮小才不會被切成兩頁（網址加 ?printfit=1 可在電腦上試）
+  document.documentElement.classList.toggle('print-shrink', needsPrintShrink());
 
   render(root);
   await document.fonts.ready;
